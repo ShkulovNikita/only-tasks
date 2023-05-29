@@ -16,8 +16,8 @@ $this->setFrameMode(true);
 			
 			<!--Ссылка на подробную новость-->
 			<a class="article-item article-list__item" 
-									href="<? echo $arItem["DETAIL_PAGE_URL"] ?>"
-									data-anim="anim-3">
+				href="<? echo $arItem["DETAIL_PAGE_URL"] ?>"
+				data-anim="anim-3">
 				<!--Установка фонового изображения-->
 				<div class="article-item__background">
 					<img src="<?= $arItem["PREVIEW_PICTURE"]["SRC"] ?>"
