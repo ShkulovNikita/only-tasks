@@ -14,4 +14,3 @@
     <? $APPLICATION->ShowPanel(); ?> 
 </div>
 <header></header>
-
