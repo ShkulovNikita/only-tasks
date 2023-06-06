@@ -67,15 +67,15 @@ if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 				if ($FIELD_SID == "medicine_message")
 				{
 					?>
-						<div class="contact-form__form-message">
-							<div class="input">
-								<label class="input__label" for="medicine_message">
-									<div class="input__label-text"><?=$arQuestion["CAPTION"]?></div>
-									<?=$arQuestion["HTML_CODE"]?>
-									<div class="input__notification"></div>
-								</label>
-							</div>
+					<div class="contact-form__form-message">
+						<div class="input">
+							<label class="input__label" for="medicine_message">
+								<div class="input__label-text"><?=$arQuestion["CAPTION"]?></div>
+								<?=$arQuestion["HTML_CODE"]?>
+								<div class="input__notification"></div>
+							</label>
 						</div>
+					</div>
 					<?
 				}
 			}
