@@ -37,7 +37,7 @@ $this->setFrameMode(true);
                     <?=$arResult["PREVIEW_TEXT"]?>
                 <?php endif?>
             </div>
-            <a class="article-card__button" href="<?=$arResult["BACK_NEWS_URL"]?>">Назад к новостям</a></div>
+            <a class="article-card__button" href='<?=$arParams["IBLOCK_URL"]?>'>Назад к новостям</a></div>
         </div>
     </div>
 </div>
