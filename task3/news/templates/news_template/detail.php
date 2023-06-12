@@ -12,6 +12,7 @@
 /** @var CBitrixComponent $component */
 $this->setFrameMode(true);
 ?>
+
 <?$ElementID = $APPLICATION->IncludeComponent(
 	"task3:news.detail",
 	"news_detail_template",

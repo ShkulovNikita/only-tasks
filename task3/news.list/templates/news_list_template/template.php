@@ -14,39 +14,42 @@ $this->setFrameMode(true);
 ?>
 
 <div id="barba-wrapper">
-    <div class="article-list">
-		<!--Цикл для вывода всех статей-->
-		<? foreach ($arResult["ITEMS"] as $arItem) : ?>
-			<!--Добавление возможности редактирования и удаления элемента-->
-			<?
-			$this->AddEditAction($arItem['ID'], $arItem['EDIT_LINK'], CIBlock::GetArrayByID($arItem["IBLOCK_ID"], "ELEMENT_EDIT"));
-			$this->AddDeleteAction($arItem['ID'], $arItem['DELETE_LINK'], CIBlock::GetArrayByID($arItem["IBLOCK_ID"], "ELEMENT_DELETE"), array("CONFIRM" => GetMessage('CT_BNL_ELEMENT_DELETE_CONFIRM')));
-			?>
+    <!-- Пройти циклом по всем разделам, чтобы найти их новости -->
+    <?php foreach ($arResult["SECTIONS"] as $arSection) { ?> 
+        <!-- Каждый раздел отображается своим списком -->
+        <div class="article-list">
+            <!-- Вывести название раздела -->
+            <div class="article-card__title"><?=$arSection["NAME"]?></div>
 
-			<!--Код одного выводимого блока-->
+            <!-- Перебрать все новости для поиска совпадения их разделов с текущим -->
+            <?php foreach ($arResult["ITEMS"] as $arItem) { 
+                if ($arItem["IBLOCK_SECTION_ID"] == $arSection["ID"]) { ?>
+                    <!-- Если идентификаторы разделов совпали, то вывести новость в данном блоке -->
 			
-			<!--Ссылка на подробную новость-->
-			<a class="article-item article-list__item" 
-				href="<? echo $arItem["DETAIL_PAGE_URL"] ?>"
-				data-anim="anim-3">
-				<!--Установка фонового изображения-->
-				<div class="article-item__background">
-					<img src="<?= $arItem["PREVIEW_PICTURE"]["SRC"] ?>"
-						data-src="xxxHTMLLINKxxx0.39186223192351520.41491856731872767xxx"
-						alt="<? echo $arItem["NAME"] ?>"/>
-				</div>
-				<!--Текстовая часть блока-->
-				<div class="article-item__wrapper">
-					<!--Заголовок-->
-					<div class="article-item__title"><? echo $arItem["NAME"] ?></div>
-					<!--Текст анонса-->
-					<div class="article-item__content">
-						<? if ($arParams["DISPLAY_PREVIEW_TEXT"] != "N" && $arItem["PREVIEW_TEXT"]): ?>
-    						<? echo $arItem["PREVIEW_TEXT"]; ?>
-						<? endif; ?>
-					</div>
-				</div>
-			</a>
-		<? endforeach; ?>
-	</div>
+                    <!-- Блок-ссылка на подробную новость -->
+                    <a class="article-item article-list__item" 
+                        href="<?php echo $arItem["DETAIL_PAGE_URL"] ?>"
+                        data-anim="anim-3">
+                        <!-- Установка фонового изображения -->
+                        <div class="article-item__background">
+                            <img src="<?= $arItem["PREVIEW_PICTURE"]["SRC"] ?>"
+                                data-src="xxxHTMLLINKxxx0.39186223192351520.41491856731872767xxx"
+                                alt="<?php echo $arItem["NAME"] ?>"/>
+                        </div>
+                        <!-- Текстовая часть блока -->
+                        <div class="article-item__wrapper">
+                            <!-- Заголовок -->
+                            <div class="article-item__title"><?php echo $arItem["NAME"] ?></div>
+                            <!-- Текст анонса -->
+                            <div class="article-item__content">
+                                <?php if ($arParams["DISPLAY_PREVIEW_TEXT"] != "N" && $arItem["PREVIEW_TEXT"]) { ?>
+                                    <?php echo $arItem["PREVIEW_TEXT"]; ?>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    </a>
+                <?php } ?>
+            <?php } ?>
+        </div>
+    <?php } ?>
 </div>
