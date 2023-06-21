@@ -5,9 +5,9 @@ namespace Only\Site\Handlers;
 
 class Iblock
 {
-    public function addLog()
+    public static function addLog($arFields)
     {
-        // Здесь напиши свой обработчик
+        echo ''; print_r($arFields); echo ''; die();
     }
 
     function OnBeforeIBlockElementAddHandler(&$arFields)
