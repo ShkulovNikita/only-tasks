@@ -5,7 +5,7 @@ namespace Only\Site\Handlers;
 
 class Iblock
 {
-    static $LOG_BLOCK_ID = 5;
+    private static $LOG_BLOCK_ID = 5;
 
     public static function addLog($arFields)
     {
@@ -15,40 +15,59 @@ class Iblock
          * должны игнорироваться. 
          */
         $LOG_CODE = 'LOG';
-        if (stripos($arFields['CODE'], $LOG_CODE) === false) {
-            /*
-             * Идентификатор раздела для лога
-             */
-            $sectionID = self::getLogSection($arFields['NAME'], $arFields['CODE'], $LOG_CODE);
-            /*
-             * Если раздела не существует, то создать его 
-             */
-            if ($sectionID === false) {
-                $newSection = new \CIBlockSection;
-                $sectionID = $newSection->Add(
-                    Array(
-                        'NAME' => $arFields['NAME'],
-                        'CODE' => $arFields['CODE'],
-                        'IBLOCK_ID' => self::$LOG_BLOCK_ID
-                    )
-                );
-            }
-
-            echo '';
+        if (stripos($arFields['CODE'], $LOG_CODE) !== false) 
+            return;
             
-            //echo $result; echo "\n\n"; print_r($arFields); echo ''; die();
-        } else {
-            echo 'LOG!'; print_r($arFields); echo ''; die();
+        /*
+         * Идентификатор раздела для лога
+         */
+        $sectionID = self::getLogSection($arFields['NAME'], $arFields['CODE'], $LOG_CODE);
+        /*
+         * Если раздела не существует, то создать его 
+         */
+        if ($sectionID === false) {
+            $newSection = new \CIBlockSection;
+            $sectionID = $newSection->Add(
+                Array(
+                    'NAME' => $arFields['NAME'],
+                    'CODE' => $arFields['CODE'],
+                    'IBLOCK_ID' => self::$LOG_BLOCK_ID
+                )
+            );
         }
-
-        // определить, добавление или редактирование
-
-
-        // создать либо получить существующий инфоблок LOG
-        
-        
+        /*
+         * Попытаться получить в разделе инфоблок лога 
+         */
+        $logIblockID = self::getLogElement($arFields['ID'], $LOG_CODE, $sectionID);
+        /*
+         * Если такого инфоблока нет, то создать
+         */
+        if ($logIblockID === false) {
+            $newLog = new \CIBlockElement;
+            $logIblockID = $newLog->Add(
+                Array(
+                    'LID' => 's1',
+                    'IBLOCK_ID' => self::$LOG_BLOCK_ID,
+                    'IBLOCK_SECTION_ID' => $sectionID,
+                    'CODE' => $LOG_CODE,
+                    'NAME' => $arFields['ID'],
+                    'ACTIVE_FROM' => date('d.m.Y'),
+                    'ACTIVE' => 'Y'
+                )
+            );
+        /*
+         * Если такой инфоблок уже есть, то обновить 
+         */
+        } else {
+            $log = new \CIBlockElement;
+            $result = $log->Update(
+                $logIblockID,
+                Array(
+                    'ACTIVE_FROM' => date('d.m.Y')
+                )
+            );
+        }
     }
-
 
     /**
      * Получение раздела для лога.
@@ -56,22 +75,17 @@ class Iblock
      * @param string $elCode Код логируемого элемента.
      * @return int|bool Идентификатор раздела, если раздел существует, либо false
      */
-    private static function getLogSection($elName, $elCode) 
+    private static function getLogSection($elName, $elCode)
     {
-        /*
-         * Поиск раздела будет осуществляться по его имени и коду 
-         */
-        $arFilter = Array(
-            'NAME' => $elName,
-            'CODE' => $elCode
-        );
-
         /*
          * Найти раздел 
          */
         $arSections = \CIBlockSection::GetList(
-            Array('SORT'=>'ASC'),
-            $arFilter,
+            Array('SORT' => 'ASC'),
+            Array(
+                'NAME' => $elName,
+                'CODE' => $elCode
+            ),
             false,
             Array('ID')
         );
@@ -82,6 +96,34 @@ class Iblock
         while ($arSect = $arSections->GetNext()) {
             return $arSect['ID'];
         } 
+
+        return false;
+    }
+
+    /**
+     * Получение инфоблока лога для заданного элемента.
+     * @param int $elID Идентификатор логируемого элемента.
+     * @param string $elCode Символьный код лога.
+     * @param int $sectionID Идентификатор раздела инфоблока-лога.
+     * @return int|bool Идентификатор инфоблока-лога либо false, если такого инфоблока нет.
+     */
+    private static function getLogElement($elID, $elCode, $sectionID)
+    {
+        $arElements = \CIBlockElement::GetList(
+            Array('SORT' => 'ASC'),
+            Array(
+                'NAME' => $elID,
+                'CODE' => $elCode,
+                'SECTION_ID' => $sectionID
+            ),
+            false,
+            false,
+            Array('ID')
+        );
+
+        while ($arEl = $arElements->GetNext()) {
+            return $arEl['ID'];
+        }
 
         return false;
     }
