@@ -5,9 +5,85 @@ namespace Only\Site\Handlers;
 
 class Iblock
 {
+    static $LOG_BLOCK_ID = 5;
+
     public static function addLog($arFields)
     {
-        echo ''; print_r($arFields); echo ''; die();
+        \CModule::IncludeModule('iblock');
+        /*
+         * Изменения в инфоблоках с кодом, содержащим "LOG",
+         * должны игнорироваться. 
+         */
+        $LOG_CODE = 'LOG';
+        if (stripos($arFields['CODE'], $LOG_CODE) === false) {
+            /*
+             * Идентификатор раздела для лога
+             */
+            $sectionID = self::getLogSection($arFields['NAME'], $arFields['CODE'], $LOG_CODE);
+            /*
+             * Если раздела не существует, то создать его 
+             */
+            if ($sectionID === false) {
+                $newSection = new \CIBlockSection;
+                $sectionID = $newSection->Add(
+                    Array(
+                        'NAME' => $arFields['NAME'],
+                        'CODE' => $arFields['CODE'],
+                        'IBLOCK_ID' => self::$LOG_BLOCK_ID
+                    )
+                );
+            }
+
+            echo '';
+            
+            //echo $result; echo "\n\n"; print_r($arFields); echo ''; die();
+        } else {
+            echo 'LOG!'; print_r($arFields); echo ''; die();
+        }
+
+        // определить, добавление или редактирование
+
+
+        // создать либо получить существующий инфоблок LOG
+        
+        
+    }
+
+
+    /**
+     * Получение раздела для лога.
+     * @param string $elName Имя логируемого элемента.
+     * @param string $elCode Код логируемого элемента.
+     * @return int|bool Идентификатор раздела, если раздел существует, либо false
+     */
+    private static function getLogSection($elName, $elCode) 
+    {
+        /*
+         * Поиск раздела будет осуществляться по его имени и коду 
+         */
+        $arFilter = Array(
+            'NAME' => $elName,
+            'CODE' => $elCode
+        );
+
+        /*
+         * Найти раздел 
+         */
+        $arSections = \CIBlockSection::GetList(
+            Array('SORT'=>'ASC'),
+            $arFilter,
+            false,
+            Array('ID')
+        );
+
+        /*
+         * Если был получен некоторый раздел, то вернуть его идентификатор 
+         */
+        while ($arSect = $arSections->GetNext()) {
+            return $arSect['ID'];
+        } 
+
+        return false;
     }
 
     function OnBeforeIBlockElementAddHandler(&$arFields)
