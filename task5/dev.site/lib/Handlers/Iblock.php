@@ -76,7 +76,7 @@ class Iblock
         /*
          * Если был получен некоторый раздел, то взять его идентификатор.
          */
-        while ($arSect = $arSections->GetNext()) {
+        while ($arSect = $arSections->Fetch()) {
             $sectionID = $arSect['ID'];
         }
         /*
@@ -162,7 +162,7 @@ class Iblock
             ['ID']
         );
 
-        while ($arEl = $arElements->GetNext()) {
+        while ($arEl = $arElements->Fetch()) {
             return $arEl['ID'];
         }
 
@@ -215,7 +215,7 @@ class Iblock
             false,
             ['ID', 'IBLOCK_SECTION_ID', 'NAME']
         );
-        $sectionInfo = $arSection->getNext();
+        $sectionInfo = $arSection->Fetch();
         /*
          * Добавить имя раздела к пути /
          */
@@ -239,7 +239,7 @@ class Iblock
     private static function getIblock($elID)
     {
         $iblockRes = \CIBlock::GetByID($elID);
-        if ($iblock = $iblockRes->GetNext()) {
+        if ($iblock = $iblockRes->Fetch()) {
             return $iblock;
         } else {
             return false;
