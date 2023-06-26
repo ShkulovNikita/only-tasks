@@ -7,7 +7,7 @@ class Iblock
 {
     public static function clearOldLogs()
     {
-        $logIblockID = 5;
+        $logIblockID = 4;
         $logIblockCode = 'LOG';
         
         \CModule::IncludeModule('iblock');
@@ -30,7 +30,7 @@ class Iblock
             $arLogs[] = $arLog;
         }
         if (count($arLogs) <= 10) {
-            return return '\\' . __CLASS__ . '::' . __FUNCTION__ . '();';
+            return '\\' . __CLASS__ . '::' . __FUNCTION__ . '();';
         }
         /*
          * Убрать из массива первые 10 элементов.
