@@ -9,7 +9,7 @@ $eventManager->AddEventHandler(
     "OnAfterIBlockElementAdd",
     [
         "Only\\Site\\Handlers\\Iblock",
-		'addLog'
+        'addLog'
     ]
 );
 $eventManager->AddEventHandler(
