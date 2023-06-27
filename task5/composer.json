@@ -1,0 +1,8 @@
+{
+    "autoload": {
+        "psr-4": {
+            "Only\\Site\\Handlers\\": "/home/bitrix/www/local/modules/dev.site/lib/Handlers/",
+            "Only\\Site\\Agents\\": "/home/bitrix/www/local/modules/dev.site/lib/Agents/"
+        }
+    }
+}
