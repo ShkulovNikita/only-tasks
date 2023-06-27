@@ -7,17 +7,15 @@ class Iblock
 {
     public static function clearOldLogs()
     {
-        $logIblockID = 4;
         $logIblockCode = 'LOG';
         
         \CModule::IncludeModule('iblock');
-        
         /*
          * Получить все логи, отсортированные по дате изменения.
          */
         $logsRes = \CIBlockElement::GetList(
             ['TIMESTAMP_X' => 'DESC'],
-            ['CODE' => $logIblockCode, 'IBLOCK_ID' => $logIblockID],
+            ['CODE' => $logIblockCode],
             false,
             false,
             ['ID', 'TIMESTAMP_X']
@@ -44,16 +42,6 @@ class Iblock
         }
     
         return '\\' . __CLASS__ . '::' . __FUNCTION__ . '();';
-    }
-
-    private static function logToFile($text)
-    {
-        $filePath = $_SERVER['DOCUMENT_ROOT'] . "/bitrix/local/logs/log.txt";
-        file_put_contents(
-            $filePath,
-            $text,
-            FILE_APPEND
-        );
     }
 
     public static function example()

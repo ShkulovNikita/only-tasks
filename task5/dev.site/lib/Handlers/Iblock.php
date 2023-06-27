@@ -5,7 +5,8 @@ namespace Only\Site\Handlers;
 
 class Iblock
 {
-    private static $LOG_BLOCK_ID = 5;
+    //private static $LOG_BLOCK_ID = 5;
+    private static $LOG_CODE = 'LOG';
 
     public static function addLog($arFields)
     {
@@ -14,14 +15,17 @@ class Iblock
          * Срабатывания на лог-элементы (код "LOG" либо пустые код и имя) 
          * должны игнорироваться.
          */
-        $LOG_CODE = 'LOG';
         if (
             (($arFields['CODE'] === null) 
             && ($arFields['NAME'] === null)) 
-            || (stripos($arFields['CODE'], $LOG_CODE) !== false)
+            || (stripos($arFields['CODE'], self::$LOG_CODE) !== false)
         ) {
             return;
         }
+        /*
+         * Получить идентификатор инфоблока логов. 
+         */
+        $logIblockID = self::getLogIblockID();
         /*
          * Получить инфоблок логируемого элемента. 
          */
@@ -33,32 +37,34 @@ class Iblock
          * Идентификатор раздела для лога.
          */
         $sectionID = self::getLogSection(
-            $iblockOfElem['NAME'], 
-            $iblockOfElem['CODE']
+            $iblockOfElem['NAME'],
+            $iblockOfElem['CODE'],
+            $logIblockID
         );
         /*
          * Получить разделы логируемого элемента инфоблока. 
          * (согласно заданию, будут записаны в тексте для анонса инфоблока-лога)
          */
         $elPath = self::getPath(
-            $arFields['NAME'], 
-            $iblockOfElem['NAME'], 
+            $arFields['NAME'],
+            $iblockOfElem['NAME'],
             $arFields['IBLOCK_SECTION']
         );
         /*
          * Обновить либо создать соответствующий элемент инфоблока-лога.
          */
-        self::updateLogElement($arFields['ID'], $LOG_CODE, $sectionID, $elPath);
+        self::updateLogElement($arFields['ID'], $sectionID, $elPath, $logIblockID);
     }
 
     /**
      * Получение раздела для лога.
      * @param string $iblockName Имя логируемого инфоблока.
      * @param string $iblockCode Код логируемого инфоблока.
+     * @param int $logIblockID Идентификатор инфоблока-лога.
      * @return int|bool Идентификатор раздела либо false, если раздела не существует,
      * и его не удалось создать.
      */
-    private static function getLogSection($iblockName, $iblockCode)
+    private static function getLogSection($iblockName, $iblockCode, $logIblockID)
     {
         $sectionID;
         /*
@@ -88,7 +94,7 @@ class Iblock
                 [
                     'NAME' => $iblockName,
                     'CODE' => $iblockCode,
-                    'IBLOCK_ID' => self::$LOG_BLOCK_ID
+                    'IBLOCK_ID' => $logIblockID
                 ]
             );
         }
@@ -99,16 +105,15 @@ class Iblock
     /**
      * Создание либо обновление элемента инфоблока-лога.
      * @param int $elID Идентификатор логируемого элемента.
-     * @param string $logCode Символьный код логов (по заданию, LOG).
      * @param int $sectionID Идентификатор раздела для лога.
      * @param string $elPath Путь вида "Инфоблок -> ..разделы инфоблока -> Элемент".
      */
-    private static function updateLogElement($elID, $logCode, $sectionID, $elPath)
+    private static function updateLogElement($elID, $sectionID, $elPath, $iblockID)
     {
         /*
          * Попробовать получить элемент лога.
          */
-        $logIblockID = self::getLogElement($elID, $logCode, $sectionID);
+        $logIblockID = self::getLogElement($elID, $sectionID);
         /*
          * Если такого инфоблока нет, то создать.
          */
@@ -117,9 +122,9 @@ class Iblock
             $logIblockID = $newLog->Add(
                 [
                     'LID' => 's1',
-                    'IBLOCK_ID' => self::$LOG_BLOCK_ID,
+                    'IBLOCK_ID' => $iblockID,
                     'IBLOCK_SECTION_ID' => $sectionID,
-                    'CODE' => $logCode,
+                    'CODE' => self::$LOG_CODE,
                     'NAME' => $elID,
                     'ACTIVE_FROM' => date('d.m.Y'),
                     'ACTIVE' => 'Y',
@@ -144,17 +149,16 @@ class Iblock
     /**
      * Получение инфоблока лога для заданного элемента.
      * @param int $elID Идентификатор логируемого элемента.
-     * @param string $elCode Символьный код лога.
      * @param int $sectionID Идентификатор раздела инфоблока-лога.
      * @return int|bool Идентификатор инфоблока-лога либо false, если такого инфоблока нет.
      */
-    private static function getLogElement($elID, $elCode, $sectionID)
+    private static function getLogElement($elID, $sectionID)
     {
         $arElements = \CIBlockElement::GetList(
             [],
             [
                 'NAME' => $elID,
-                'CODE' => $elCode,
+                'CODE' => self::$LOG_CODE,
                 'SECTION_ID' => $sectionID
             ],
             false,
@@ -234,13 +238,30 @@ class Iblock
     /**
      * Получение инфоблока, которому принадлежит указанный элемент.
      * @param int $elID Идентификатор элемента инфоблока.
-     * @return string|bool Имя информационного блока либо false.
+     * @return CIBlock|bool Информационный блок либо false, если не найден.
      */
     private static function getIblock($elID)
     {
         $iblockRes = \CIBlock::GetByID($elID);
         if ($iblock = $iblockRes->Fetch()) {
             return $iblock;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Получение идентификатора инфоблока логов.
+     * @return int|bool Идентификатор инфоблока либо false, если не найден.
+     */
+    private static function getLogIblockID() 
+    {
+        $iblockRes = \CIBlock::GetList(
+            [],
+            ['CODE' => self::$LOG_CODE]
+        );
+        if ($iblock = $iblockRes->Fetch()) {
+            return $iblock['ID'];
         } else {
             return false;
         }
