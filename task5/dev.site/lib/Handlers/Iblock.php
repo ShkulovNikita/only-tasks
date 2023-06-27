@@ -5,7 +5,6 @@ namespace Only\Site\Handlers;
 
 class Iblock
 {
-    //private static $LOG_BLOCK_ID = 5;
     private static $LOG_CODE = 'LOG';
 
     public static function addLog($arFields)
