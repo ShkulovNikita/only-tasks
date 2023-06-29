@@ -15,6 +15,7 @@ $this->setFrameMode(true);
 ?>
 <!-- Контейнер для списка инфоблоков. -->
 <div class="news-list">
+    <?php print_r($arParams) ?>
     <!-- Вывод постранички, если она должна быть сверху. -->
     <?php if ($arParams["DISPLAY_TOP_PAGER"]) { ?>
         <?=$arResult["NAV_STRING"]?><br />
