@@ -346,7 +346,7 @@ $arComponentParameters = [
             "DEFAULT" => "N",
         ],
         /*
-         * Учитывать права доступа. 
+         * Учитывать права доступа при кешировании. 
          */
         "CACHE_GROUPS" => [
             "PARENT" => "CACHE_SETTINGS",
