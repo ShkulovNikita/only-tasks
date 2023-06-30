@@ -33,8 +33,14 @@ $bUSER_HAVE_ACCESS = $this->bUSER_HAVE_ACCESS;
  * @param bool Время кеширования.
  * @param array От чего дополнительно зависит кеш.
  */
-if($this->startResultCache(false, array(($arParams["CACHE_GROUPS"]==="N"? false: $USER->GetGroups()), $bUSER_HAVE_ACCESS, $arNavigation, $arrFilter, $pagerParameters))) {
-    
+if ($this->startResultCache(
+    false, 
+    array(($arParams["CACHE_GROUPS"]==="N"? false: $USER->GetGroups()), 
+    $bUSER_HAVE_ACCESS, 
+    $arNavigation, 
+    $arrFilter, 
+    $pagerParameters))
+) {
     $resultOfMakingArray = $this->makeArResult($arParams);
     /*
      * Если было возвращено false, то необходимо остановить обработку компонента. 
@@ -53,286 +59,26 @@ if($this->startResultCache(false, array(($arParams["CACHE_GROUPS"]==="N"? false:
     $arSelect = $this->arSelect;
     $bGetProperty = $this->bGetProperty;
     $arFilter = $this->arFilter;
+    $arSort = $this->arSort;
+    $shortSelect = $this->shortSelect;
+    $listPageUrl = $this->listPageUrl;
 
-    ShowError("Фильтр: <br>");
+    ShowError("arSelect: <br>");
+    ShowError(var_dump($arSelect));
+    ShowError("<br> bGetProperty: <br>");
+    ShowError(var_dump($bGetProperty));
+    ShowError("<br> arSort: <br>");
+    ShowError(var_dump($arSort));
+    ShowError("<br> Фильтр: <br>");
     ShowError(var_dump($arFilter));
     ShowError("<br> Result: <br>");
     ShowError(var_dump($arResult));
+    ShowError("<br> shortSelect: <br>");
+    ShowError(var_dump($shortSelect));
+    ShowError("<br> listPageUrl: <br>");
+    ShowError(var_dump($listPageUrl));
     ShowError("<br><br>");
 
-    /*
-     * Запись сортировки в виде $arParams[Поле сортировки] => Порядок сортировки. 
-     */
-    //ORDER BY
-    $arSort = array(
-        $arParams["SORT_BY1"] => $arParams["SORT_ORDER1"],
-        $arParams["SORT_BY2"] => $arParams["SORT_ORDER2"],
-    );
-    if (!array_key_exists("ID", $arSort)) {
-        $arSort["ID"] = "DESC";
-    }
-    /*
-     * Сохранить в $shortSelect поля, используемые для сортировки.
-     * Используется как список получаемых полей в CIBlockElement:GetList.
-     */
-    $shortSelect = array('ID', 'IBLOCK_ID');
-    foreach (array_keys($arSort) as $index) {
-        if (!in_array($index, $shortSelect)) {
-            $shortSelect[] = $index;
-        }
-    }
-    
-    $listPageUrl = '';
-    /*
-     * Список выводимых элементов инфоблоков. 
-     */
-    $arResult["ITEMS"] = array();
-    /*
-     * Идентификаторы элементов из $arResult["ITEMS"]. 
-     */
-    $arResult["ELEMENTS"] = array();
-    /*
-     * Получить список элементов с заполненными ранее сортировкой, фильтрами, 
-     * параметрами постраничной навигации, списком возвращаемых полей.
-     */
-    $rsElement = CIBlockElement::GetList(
-        $arSort, 
-        array_merge(
-            $arFilter, 
-            $arrFilter), 
-        false, 
-        $arNavParams, 
-        $shortSelect);
-    while ($row = $rsElement->Fetch()) {
-        $id = (int)$row['ID'];
-        $arResult["ITEMS"][$id] = $row;
-        $arResult["ELEMENTS"][] = $id;
-    }
-    unset($row);
-    /*
-     * Если в результате запроса были получены инфоблоки. 
-     */
-    if (!empty($arResult['ITEMS'])) {
-        /*
-         * $elementFilter содержит идентификаторы инфоблока, сайта и полученных элементов. 
-         */
-        $elementFilter = array(
-            "IBLOCK_ID" => $arResult["ID"],
-            "IBLOCK_LID" => SITE_ID,
-            "ID" => $arResult["ELEMENTS"]
-        );
-        /*
-         * Отображение ещё не опубликованных инфоблоков. 
-         */
-        if (isset($arrFilter['SHOW_NEW'])) {
-            $elementFilter['SHOW_NEW'] = $arrFilter['SHOW_NEW'];
-        }
-        
-        $obParser = new CTextParser;
-        /*
-         * Получить список элементов в соответствии с фильтром выше. 
-         */
-        $iterator = CIBlockElement::GetList(array(), $elementFilter, false, false, $arSelect);
-        /*
-         * Применить шаблоны путей.
-         */
-        $iterator->SetUrlTemplates($arParams["DETAIL_URL"], '', ($arParams["IBLOCK_URL"] ?? ''));
-        while ($arItem = $iterator->GetNext()) {
-            /*
-             * Набор кнопок для управления текущим элементом инфоблока. 
-             */
-            $arButtons = CIBlock::GetPanelButtons(
-                $arItem["IBLOCK_ID"], // Идентификатор инфоблока.
-                $arItem["ID"], // Идентификатор элемента.
-                0, // Идентификатор раздела.
-                array("SECTION_BUTTONS" => false, "SESSID" => false)
-            );
-            /*
-             * Задать ссылки на редактирование и удаление элемента. 
-             */
-            $arItem["EDIT_LINK"] = $arButtons["edit"]["edit_element"]["ACTION_URL"] ?? '';
-            $arItem["DELETE_LINK"] = $arButtons["edit"]["delete_element"]["ACTION_URL"] ?? '';
-            /*
-             * Обрезка текста анонса, если требуется. 
-             */
-            if ($arParams["PREVIEW_TRUNCATE_LEN"] > 0) {
-                $arItem["PREVIEW_TEXT"] = $obParser->html_cut($arItem["PREVIEW_TEXT"], $arParams["PREVIEW_TRUNCATE_LEN"]);
-            }
-            /*
-             * Отображение даты начала активности. 
-             */
-            if ($arItem["ACTIVE_FROM"] <> '') {
-                $arItem["DISPLAY_ACTIVE_FROM"] = CIBlockFormatProperties::DateFormat($arParams["ACTIVE_DATE_FORMAT"], MakeTimeStamp($arItem["ACTIVE_FROM"], CSite::GetDateFormat()));
-            } else {
-                $arItem["DISPLAY_ACTIVE_FROM"] = "";
-            }
-
-            /*
-             * Метка для элемента для запроса из БД. 
-             */
-            Iblock\InheritedProperty\ElementValues::queue($arItem["IBLOCK_ID"], $arItem["ID"]);
-
-            $arItem["FIELDS"] = array();
-            /*
-             * Если есть массив свойств, то добавить такой массив для $arItem.
-             */
-            if ($bGetProperty) {
-                $arItem["PROPERTIES"] = array();
-            }
-            $arItem["DISPLAY_PROPERTIES"] = array();
-
-            /*
-             * Учитывать время последней модификации. 
-             */
-            if ($arParams["SET_LAST_MODIFIED"]) {
-                $time = DateTime::createFromUserTime($arItem["TIMESTAMP_X"]);
-                /*
-                 * 
-                 */
-                if (
-                    !isset($arResult["ITEMS_TIMESTAMP_X"])
-                    || $time->getTimestamp() > $arResult["ITEMS_TIMESTAMP_X"]->getTimestamp()
-                ) {
-                    $arResult["ITEMS_TIMESTAMP_X"] = $time;
-                }
-            }
-
-            /*
-             * Ссылка на страницу со списком элементов. 
-             */
-            if ($listPageUrl === '' && isset($arItem['~LIST_PAGE_URL'])) {
-                $listPageUrl = $arItem['~LIST_PAGE_URL'];
-            }
-
-            /*
-             * Внести полученный элемент $arItem в подмассив ITEMS. 
-             */
-            $id = (int)$arItem["ID"];
-            $arResult["ITEMS"][$id] = $arItem;
-        }
-        unset($obElement);
-        unset($iterator);
-
-        /*
-         * Если есть массив свойств, то записать свойства в $arResult[ITEMS].
-         */
-        if ($bGetProperty) {
-            unset($elementFilter['IBLOCK_LID']);
-            CIBlockElement::GetPropertyValuesArray(
-                $arResult["ITEMS"],
-                $arResult["ID"],
-                $elementFilter
-            );
-        }
-    }
-
-    /*
-     * Перебрать полученный массив элементов. 
-     */
-    $arResult['ITEMS'] = array_values($arResult['ITEMS']);
-    foreach ($arResult["ITEMS"] as &$arItem) {
-        /*
-         * Заполнить значения свойств для отображения. 
-         */
-        if ($bGetProperty) {
-            foreach ($arParams["PROPERTY_CODE"] as $pid) {
-                $prop = &$arItem["PROPERTIES"][$pid];
-                if (
-                    (is_array($prop["VALUE"]) && count($prop["VALUE"]) > 0)
-                    || (!is_array($prop["VALUE"]) && $prop["VALUE"] <> '')
-                ) {
-                    $arItem["DISPLAY_PROPERTIES"][$pid] = CIBlockFormatProperties::GetDisplayValue($arItem, $prop);
-                }
-            }
-        }
-
-        $ipropValues = new Iblock\InheritedProperty\ElementValues($arItem["IBLOCK_ID"], $arItem["ID"]);
-        $arItem["IPROPERTY_VALUES"] = $ipropValues->getValues();
-        Iblock\Component\Tools::getFieldImageData(
-            $arItem,
-            array('PREVIEW_PICTURE', 'DETAIL_PICTURE'),
-            Iblock\Component\Tools::IPROPERTY_ENTITY_ELEMENT,
-            'IPROPERTY_VALUES'
-        );
-
-        foreach($arParams["FIELD_CODE"] as $code) {
-            if (array_key_exists($code, $arItem)) {
-                $arItem["FIELDS"][$code] = $arItem[$code];
-            }
-        }
-    }
-    unset($arItem);
-    if ($bGetProperty) {
-        \CIBlockFormatProperties::clearCache();
-    }
-
-    /*
-     * Включена обработка ссылок для постраничной навигации. 
-     */
-    $navComponentParameters = array();
-    if ($arParams["PAGER_BASE_LINK_ENABLE"] === "Y") {
-        /*
-         * Адрес для построения ссылок. 
-         */
-        $pagerBaseLink = trim($arParams["PAGER_BASE_LINK"]);
-        /*
-         * Если адрес не задан, то построить его. 
-         */
-        if ($pagerBaseLink === "") {
-            if (
-                $arResult["SECTION"]
-                && $arResult["SECTION"]["PATH"]
-                && $arResult["SECTION"]["PATH"][0]
-                && $arResult["SECTION"]["PATH"][0]["~SECTION_PAGE_URL"]
-            ) {
-                $pagerBaseLink = $arResult["SECTION"]["PATH"][0]["~SECTION_PAGE_URL"];
-            } elseif (
-                $listPageUrl !== ''
-            ) {
-                $pagerBaseLink = $listPageUrl;
-            }
-        }
-
-        if ($pagerParameters && isset($pagerParameters["BASE_LINK"])) {
-            $pagerBaseLink = $pagerParameters["BASE_LINK"];
-            unset($pagerParameters["BASE_LINK"]);
-        }
-
-        /*
-         * Задать параметры для постраничной навигации. 
-         */
-        $navComponentParameters["BASE_LINK"] = CHTTP::urlAddParams($pagerBaseLink, $pagerParameters, array("encode"=>true));
-    }
-
-    /*
-     * Получить панель постраничной навигации. 
-     */
-    $arResult["NAV_STRING"] = $rsElement->GetPageNavStringEx(
-        $navComponentObject,
-        $arParams["PAGER_TITLE"],
-        $arParams["PAGER_TEMPLATE"],
-        $arParams["PAGER_SHOW_ALWAYS"],
-        $this,
-        $navComponentParameters
-    );
-    $arResult["NAV_CACHED_DATA"] = null;
-    $arResult["NAV_RESULT"] = $rsElement;
-    $arResult["NAV_PARAM"] = $navComponentParameters;
-
-    /*
-     * Указание, какие ключи массива $arResult должны кешироваться. 
-     */
-    $this->setResultCacheKeys(array(
-        "ID",
-        "IBLOCK_TYPE_ID",
-        "LIST_PAGE_URL",
-        "NAV_CACHED_DATA",
-        "NAME",
-        "SECTION",
-        "ELEMENTS",
-        "IPROPERTY_VALUES",
-        "ITEMS_TIMESTAMP_X",
-    ));
     /*
      * Подключение шаблона компонента. 
      */

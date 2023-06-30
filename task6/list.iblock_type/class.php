@@ -47,6 +47,9 @@ class CTraineeList extends CBitrixComponent
     public $arSelect;
     public $bGetProperty;
     public $arFilter;
+    public $arSort;
+    public $shortSelect;
+    public $listPageUrl;
 
 
 
@@ -85,7 +88,7 @@ class CTraineeList extends CBitrixComponent
          * Получить инфоблок, ID или код которого был передан в arParams.
          */
         $getIblockResult = $this->getIblock($arParams);
-        if (!$getIblockResult) {
+        if ($getIblockResult === false) {
             return false;
         }
         /*
@@ -104,8 +107,76 @@ class CTraineeList extends CBitrixComponent
          * Параметры фильтра для выборки элементов инфоблока.
          */
         $arFilter = $this->setFilter($arParams);
-
-
+        if ($arFilter === false) {
+            return false;
+        }
+        /*
+         * Параметры сортировки. 
+         */
+        $arSort = $this->setOrdering($arParams);
+        /*
+         * Подготовить короткий список полей для пробного запроса. 
+         */
+        $shortSelect = $this->makeShortSelect($arSort);
+        /*
+         * Ссылка на страницу со списком элементов. 
+         */
+        $listPageUrl = '';
+        /*
+         * Список выводимых элементов инфоблоков. 
+         */
+        $arResult["ITEMS"] = array();
+        /*
+         * Идентификаторы элементов из $arResult["ITEMS"]. 
+         */
+        $arResult["ELEMENTS"] = array();
+        /*
+         * Выполнить запрос на выборку элементов с коротким списком полей.
+         */
+        $rsElement = $this->getShortElements($arSort, $arFilter, $shortSelect);
+        /*
+         * Если в результате запроса были получены элементы инфоблока. 
+         */
+        if (!empty($this->arResult['ITEMS'])) {
+            /*
+             * $elementFilter содержит идентификаторы инфоблока, сайта и полученных элементов. 
+             */
+            $elementFilter = array(
+                "IBLOCK_ID" => $this->arResult["ID"],
+                "IBLOCK_LID" => SITE_ID,
+                "ID" => $this->arResult["ELEMENTS"]
+            );
+            /*
+             * Получить элементы со всеми требуемыми полями. 
+             */
+            $iblockElements = $this->getIblockElements($arSelect, $arParams, $elementFilter);
+            /*
+             * Выполнить обработку полученных элементов. 
+             */
+            $this->processIblockElements($iblockElements, $arParams, $bGetProperty, $listPageUrl);
+            unset($iblockElements);
+            /*
+             * Если есть массив свойств, то записать свойства в $arResult[ITEMS]. 
+             */
+            $this->setElementProperties($bGetProperty, $elementFilter);
+        }
+        /*
+         * Заполнить значения свойств. 
+         */
+        $this->fillElementProperties($bGetProperty, $arParams);
+        /*
+         * Обработка ссылок для постраничной навигации. 
+         */
+        $navComponentParameters = array();
+        $this->processPageLinks($navComponentParameters, $listPageUrl, $arParams);
+        /*
+         * Получение HTML панели постраничной навигации. 
+         */
+        $this->setPagerPanel($navComponentParameters, $rsElement, $arParams);
+        /*
+         * Указать, какие ключи массива $arResult должны кешироваться. 
+         */
+        $this->setResultCachedKeys();
 
         /**
          * ----------------
@@ -115,6 +186,9 @@ class CTraineeList extends CBitrixComponent
         $this->arSelect = $arSelect;
         $this->bGetProperty = $bGetProperty;
         $this->arFilter = $arFilter;
+        $this->arSort = $arSort;
+        $this->shortSelect = $shortSelect;
+        $this->listPageUrl = $listPageUrl;
 
         /**
          * 
@@ -609,9 +683,363 @@ class CTraineeList extends CBitrixComponent
         unset($arPath, $rsPath);
     }
 
+    /**
+     * Задать сортировку.
+     * @param array $arParams Параметры компонента.
+     * @return array Массив с параметрами сортировки (поля и направление).
+     */
+    private function setOrdering($arParams)
+    {
+        $arSort = array(
+            $arParams["SORT_BY1"] => $arParams["SORT_ORDER1"],
+            $arParams["SORT_BY2"] => $arParams["SORT_ORDER2"],
+        );
+        if (!array_key_exists("ID", $arSort)) {
+            $arSort["ID"] = "DESC";
+        }
 
+        return $arSort;
+    }
 
+    /**
+     * Подготовить массив с минимальным числом полей для попытки получения элементов.
+     * @param array $arSort Массив с параметрами сортировки.
+     * @return array Массив с "коротким" списком полей для запроса на получение элементов.
+     */
+    private function makeShortSelect($arSort)
+    {
+        $shortSelect = array('ID', 'IBLOCK_ID');
+        foreach (array_keys($arSort) as $index) {
+            if (!in_array($index, $shortSelect)) {
+                $shortSelect[] = $index;
+            }
+        }
+        return $shortSelect;
+    }
 
+    /**
+     * Выполнить запрос на получение элементов инфоблока с коротким списком полей.
+     * @param array $arSort Массив с параметрами сортировки.
+     * @param array $arFilter Массив с параметрами фильтрации.
+     * @param array $shortSelect Поля для выборки.
+     * @return $rsElement Полученный список элементов инфоблока.
+     */
+    private function getShortElements($arSort, $arFilter, $shortSelect)
+    {
+        $rsElement = CIBlockElement::GetList(
+            $arSort, 
+            array_merge(
+                $arFilter, 
+                $this->arrFilter
+            ), 
+            false, 
+            $this->arNavParams, 
+            $shortSelect
+        );
+        while ($row = $rsElement->Fetch()) {
+            $id = (int)$row['ID'];
+            $this->arResult["ITEMS"][$id] = $row;
+            $this->arResult["ELEMENTS"][] = $id;
+        }
+        unset($row);
 
+        return $rsElement;
+    }
 
+    /**
+     * Выполнить запрос на получение элементов инфоблоков.
+     * @param array $arSelect Поля для элементов, которые необходимо получить.
+     * @param array $arParams Параметры компонента.
+     * @param array $elementFilter Массив с идентификаторами инфоблока, сайта и 
+     * полученных в "коротком" запросе элементов.
+     * @return array Полученные элементы инфоблока.
+     */
+    private function getIblockElements($arSelect, &$arParams, &$elementFilter)
+    {
+        /*
+         * Отображение ещё не опубликованных инфоблоков. 
+         */
+        if (isset($this->arrFilter['SHOW_NEW'])) {
+            $elementFilter['SHOW_NEW'] = $this->arrFilter['SHOW_NEW'];
+        }
+        /*
+         * Получить список элементов в соответствии с фильтром выше. 
+         */
+        $iterator = CIBlockElement::GetList(array(), $elementFilter, false, false, $arSelect);
+        /*
+         * Применить шаблоны путей.
+         */
+        $iterator->SetUrlTemplates($arParams["DETAIL_URL"], '', ($arParams["IBLOCK_URL"] ?? ''));
+        
+        return $iterator;
+    }
+
+    /**
+     * Выполнить обработку элементов инфоблока для их вывода в компоненте.
+     * @param array $iterator Массив-результат запроса на получение элементов инфоблока.
+     * @param array $arParams Параметры компонента.
+     * @param bool $bGetProperty Факт наличия у инфоблока свойств.
+     * @param string $listPageUrl Ссылка на страницу со списком элементов.
+     */
+    private function processIblockElements($iterator, $arParams, $bGetProperty, &$listPageUrl)
+    {
+        $obParser = new CTextParser;
+        /*
+         * Перебрать все полученные элементы 
+         */
+        while ($arItem = $iterator->GetNext()) {
+            /*
+             * Добавить ссылки на удаление и редактирование элемента. 
+             */
+            $this->addElementButtons($arItem);
+            /*
+             * Обрезать текст анонса, если нужно. 
+             */
+            $this->cutPreviewText($obParser, $arItem, $arParams);
+            /*
+             * Отображение даты начала активности. 
+             */
+            $this->displayActiveDate($arItem, $arParams);
+
+            Iblock\InheritedProperty\ElementValues::queue($arItem["IBLOCK_ID"], $arItem["ID"]);
+            $arItem["FIELDS"] = array();
+            /*
+             * Если есть массив свойств, то добавить такой массив для $arItem.
+             */
+            if ($bGetProperty) {
+                $arItem["PROPERTIES"] = array();
+            }
+            $arItem["DISPLAY_PROPERTIES"] = array();
+            /*
+             * Учитывать время последней модификации. 
+             */
+            $this->setLastModified($arItem, $arParams);
+            /*
+             * Ссылка на страницу со списком элементов. 
+             */
+            if ($listPageUrl === '' && isset($arItem['~LIST_PAGE_URL'])) {
+                $listPageUrl = $arItem['~LIST_PAGE_URL'];
+            }
+            /*
+             * Внести полученный элемент $arItem в подмассив ITEMS. 
+             */
+            $id = (int)$arItem["ID"];
+            $this->arResult["ITEMS"][$id] = $arItem;
+        }
+    }
+
+    /**
+     * Добавить к элементу кнопки редактирования и удаления.
+     * @param array $arItem Элемент инфоблока.
+     */
+    private function addElementButtons(&$arItem)
+    {
+        /*
+         * Набор кнопок для управления текущим элементом инфоблока. 
+         */
+        $arButtons = CIBlock::GetPanelButtons(
+            $arItem["IBLOCK_ID"], // Идентификатор инфоблока.
+            $arItem["ID"], // Идентификатор элемента.
+            0, // Идентификатор раздела.
+            array("SECTION_BUTTONS" => false, "SESSID" => false)
+        );
+        /*
+         * Задать ссылки на редактирование и удаление элемента. 
+         */
+        $arItem["EDIT_LINK"] = $arButtons["edit"]["edit_element"]["ACTION_URL"] ?? '';
+        $arItem["DELETE_LINK"] = $arButtons["edit"]["delete_element"]["ACTION_URL"] ?? '';
+    }
+
+    /**
+     * Обрезка текста анонса, если требуется. 
+     * @param CTextParser Парсер для работы с текстом.
+     * @param array $arItem Элемент инфоблока.
+     * @param array $arParams Параметры компонента.
+     */
+    private function cutPreviewText($obParser, &$arItem, $arParams)
+    {
+        if ($arParams["PREVIEW_TRUNCATE_LEN"] > 0) {
+            $arItem["PREVIEW_TEXT"] = $obParser->html_cut($arItem["PREVIEW_TEXT"], $arParams["PREVIEW_TRUNCATE_LEN"]);
+        }
+    }
+
+    /**
+     * Отображение даты начала активности.
+     * @param array $arItem Элемент инфоблока.
+     * @param array $arParams Параметры компонента.
+     */
+    private function displayActiveDate(&$arItem, $arParams)
+    {
+        if ($arItem["ACTIVE_FROM"] <> '') {
+            $arItem["DISPLAY_ACTIVE_FROM"] = CIBlockFormatProperties::DateFormat(
+                $arParams["ACTIVE_DATE_FORMAT"], 
+                MakeTimeStamp($arItem["ACTIVE_FROM"], 
+                CSite::GetDateFormat())
+            );
+        } else {
+            $arItem["DISPLAY_ACTIVE_FROM"] = "";
+        }
+    }
+
+    /**
+     * Учитывать время последней модификации.
+     * @param array $arItem Элемент инфоблока.
+     * @param array $arParams Параметры компонента.
+     */
+    private function setLastModified($arItem, $arParams)
+    {
+        if ($arParams["SET_LAST_MODIFIED"]) {
+            $time = DateTime::createFromUserTime($arItem["TIMESTAMP_X"]);
+            if (
+                !isset($this->arResult["ITEMS_TIMESTAMP_X"])
+                || $time->getTimestamp() > $this->$arResult["ITEMS_TIMESTAMP_X"]->getTimestamp()
+            ) {
+                $this->arResult["ITEMS_TIMESTAMP_X"] = $time;
+            }
+        }
+    }
+
+    /**
+     * Если есть массив свойств, то записать свойства в $arResult[ITEMS].
+     * @param bool $bGetProperty Флаг наличия свойств.
+     * @param array $elementFilter Массив с идентификаторами инфоблока, сайта и элементов.
+     */
+    private function setElementProperties($bGetProperty, &$elementFilter)
+    {
+        if ($bGetProperty) {
+            unset($elementFilter['IBLOCK_LID']);
+            CIBlockElement::GetPropertyValuesArray(
+                $this->arResult["ITEMS"],
+                $this->arResult["ID"],
+                $elementFilter
+            );
+        }
+    }
+
+    /**
+     * Заполнить значения свойств элементов.
+     * @param bool $bGetProperty Флаг наличия свойств.
+     * @param array $arParams Параметры компонента.
+     */
+    private function fillElementProperties($bGetProperty, $arParams)
+    {
+        $this->arResult['ITEMS'] = array_values($this->arResult['ITEMS']);
+        foreach ($this->arResult["ITEMS"] as &$arItem) {
+            /*
+             * Заполнить значения свойств для отображения. 
+             */
+            if ($bGetProperty) {
+                foreach ($arParams["PROPERTY_CODE"] as $pid) {
+                    $prop = &$arItem["PROPERTIES"][$pid];
+                    if (
+                        (is_array($prop["VALUE"]) && count($prop["VALUE"]) > 0)
+                        || (!is_array($prop["VALUE"]) && $prop["VALUE"] <> '')
+                    ) {
+                        $arItem["DISPLAY_PROPERTIES"][$pid] = CIBlockFormatProperties::GetDisplayValue($arItem, $prop);
+                    }
+                }
+            }
+    
+            $ipropValues = new Iblock\InheritedProperty\ElementValues($arItem["IBLOCK_ID"], $arItem["ID"]);
+            $arItem["IPROPERTY_VALUES"] = $ipropValues->getValues();
+            Iblock\Component\Tools::getFieldImageData(
+                $arItem,
+                array('PREVIEW_PICTURE', 'DETAIL_PICTURE'),
+                Iblock\Component\Tools::IPROPERTY_ENTITY_ELEMENT,
+                'IPROPERTY_VALUES'
+            );
+    
+            foreach($arParams["FIELD_CODE"] as $code) {
+                if (array_key_exists($code, $arItem)) {
+                    $arItem["FIELDS"][$code] = $arItem[$code];
+                }
+            }
+        }
+        unset($arItem);
+        if ($bGetProperty) {
+            \CIBlockFormatProperties::clearCache();
+        }
+    }
+
+    /**
+     * Обработка ссылок для постраничной навигации.
+     * @param array $navComponentParameters Параметры постраничной навигации.
+     * @param string $listPageUrl Ссылка на страницу со списком элементов.
+     * @param array $arParams Параметры компонента.
+     */
+    private function processPageLinks(&$navComponentParameters, $listPageUrl, $arParams)
+    {
+        if ($arParams["PAGER_BASE_LINK_ENABLE"] === "Y") {
+            /*
+             * Адрес для построения ссылок. 
+             */
+            $pagerBaseLink = trim($arParams["PAGER_BASE_LINK"]);
+            /*
+             * Если адрес не задан, то построить его. 
+             */
+            if ($pagerBaseLink === "") {
+                if (
+                    $this->arResult["SECTION"]
+                    && $this->arResult["SECTION"]["PATH"]
+                    && $this->arResult["SECTION"]["PATH"][0]
+                    && $this->arResult["SECTION"]["PATH"][0]["~SECTION_PAGE_URL"]
+                ) {
+                    $pagerBaseLink = $this->arResult["SECTION"]["PATH"][0]["~SECTION_PAGE_URL"];
+                } elseif (
+                    $listPageUrl !== ''
+                ) {
+                    $pagerBaseLink = $listPageUrl;
+                }
+            }
+    
+            if ($this->pagerParameters && isset($this->pagerParameters["BASE_LINK"])) {
+                $pagerBaseLink = $this->pagerParameters["BASE_LINK"];
+                unset($this->pagerParameters["BASE_LINK"]);
+            }
+    
+            /*
+             * Задать параметры для постраничной навигации. 
+             */
+            $navComponentParameters["BASE_LINK"] = CHTTP::urlAddParams($pagerBaseLink, $this->pagerParameters, array("encode"=>true));
+        }
+    }
+
+    /**
+     * Задание панели постраничной навигации.
+     * @param array $navComponentParameters Параметры постраничной навигации.
+     * @param $rsElement Результат запроса на получение элементов инфоблока в короткой форме.
+     * @param array $arParams Параметры компонента.
+     */
+    private function setPagerPanel($navComponentParameters, $rsElement, $arParams)
+    {
+        $this->arResult["NAV_STRING"] = $rsElement->GetPageNavStringEx(
+            $navComponentObject,
+            $arParams["PAGER_TITLE"],
+            $arParams["PAGER_TEMPLATE"],
+            $arParams["PAGER_SHOW_ALWAYS"],
+            $this,
+            $navComponentParameters
+        );
+        $this->arResult["NAV_CACHED_DATA"] = null;
+        $this->arResult["NAV_RESULT"] = $rsElement;
+        $this->arResult["NAV_PARAM"] = $navComponentParameters;
+    }
+
+    /**
+     * Указать, какие ключи массива $arResult должны кешироваться.
+     */
+    private function setResultCachedKeys()
+    {
+        $this->setResultCacheKeys(array(
+            "ID",
+            "IBLOCK_TYPE_ID",
+            "LIST_PAGE_URL",
+            "NAV_CACHED_DATA",
+            "NAME",
+            "SECTION",
+            "ELEMENTS",
+            "IPROPERTY_VALUES",
+            "ITEMS_TIMESTAMP_X",
+        ));
+    }
 }
