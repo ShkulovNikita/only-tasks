@@ -430,9 +430,7 @@ class CTraineeList extends CBitrixComponent
     }
 
     /**
-     * Заполнить фильтр для получения элементов инфоблока.
-     * @param array $arParams Параметры компонента.
-     * @return array|bool Массив с параметрами фильтра либо false, если произошла ошибка. 
+     * 
      */
     private function setFilter(&$arParams)
     {
@@ -440,7 +438,7 @@ class CTraineeList extends CBitrixComponent
          * Включить в фильтр идентификаторы инфоблока, сайта, активность и права доступа. 
          */
         $arFilter = array(
-            "IBLOCK_ID" => $this->arResult["ID"],
+            "IBLOCK_ID" => $arResult["ID"],
             "IBLOCK_LID" => SITE_ID,
             "ACTIVE" => "Y",
             "CHECK_PERMISSIONS" => $arParams['CHECK_PERMISSIONS'] ? "Y" : "N",
@@ -452,163 +450,20 @@ class CTraineeList extends CBitrixComponent
         if ($arParams["CHECK_DATES"]) {
             $arFilter["ACTIVE_DATE"] = "Y";
         }
-        /*
-         * Добавить в фильтр параметры раздела, если требуется. 
-         */
-        $checkParentSectionResult = $this->checkParentSection($arParams, $arFilter);
-        if ($checkParentSectionResult === false) {
-            return false;
-        }
+
+
 
         return $arFilter;
     }
 
     /**
-     * Получить параметры раздела (если требуется) и внести их в фильтр и $arResult.
-     * @param array $arParams Параметры компонента.
-     * @param array $arFilter Фильтр для получения элементов инфоблока.
-     * @return bool true, если не возникло ошибок, иначе false.
+     * 
      */
-    private function checkParentSection(&$arParams, &$arFilter)
+    private function checkParentSection(&$arParams)
     {
-        /*
-         * Получить ID родительского раздела по его идентификатору, коду и идентификатору инфоблока. 
-         */
-        $PARENT_SECTION = $this->getParentSectionID(
-            $arParams["PARENT_SECTION"], 
-            $arParams["PARENT_SECTION_CODE"], 
-            $this->arResult["ID"]
-        );
-        /*
-         * Проверить при строгой проверке раздела, что ID родительского раздела был успешно получен. 
-         */
-        $getParentSectionResult = $this->checkStrictParentSection(
-            $arParams,
-            $PARENT_SECTION
-        );
-        if ($getParentSectionResult === false) {
-            return false;
-        }
-        $arParams["PARENT_SECTION"] = $PARENT_SECTION;
-        /*
-         * Добавить параметры раздела в фильтр. 
-         */
-        $this->addSectionToFilter($arParams, $arFilter);
 
-        return true;
+
     }
-
-    /**
-     * Получить идентификатор родительского раздела.
-     * @param int $parentSectionID ID раздела.
-     * @param string $parentSectionCode Символьный код раздела.
-     * @param int $iblockID ID инфоблока.
-     * @return int ID раздела.
-     */
-    private function getParentSectionID($parentSectionID, $parentSectionCode, $iblockID)
-    {
-        return CIBlockFindTools::GetSectionID(
-            $parentSectionID,
-            $parentSectionCode,
-            array(
-                "GLOBAL_ACTIVE" => "Y",
-                "IBLOCK_ID" => $iblockID,
-            )
-        );
-    }
-
-    /**
-     * Если задана строгая проверка раздела, и задан ID раздела или его код,
-     * то проверить, был ли получен ID родительского раздела (если нет - ошибка).
-     * @param array $arParams Параметры компонента.
-     * @param int $parentSection Полученный ранее ID раздела.
-     * @return bool true - если ID успешно получен, иначе false.
-     */
-    private function checkStrictParentSection(&$arParams, $parentSection)
-    {
-        if (
-            $arParams["STRICT_SECTION_CHECK"]
-            && (
-                $arParams["PARENT_SECTION"] > 0
-                || $arParams["PARENT_SECTION_CODE"] <> ''
-            )
-        ) {
-            if ($parentSection <= 0) {
-                $this->abortResultCache();
-                Iblock\Component\Tools::process404(
-                    trim($arParams["MESSAGE_404"]) ?: GetMessage("T_IBLOCK_TYPE_LIST_NA"),
-                    true,
-                    $arParams["SET_STATUS_404"] === "Y",
-                    $arParams["SHOW_404"] === "Y",
-                    $arParams["FILE_404"]
-                );
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * При заданном разделе внесение соответствующих параметров в фильтр.
-     * @param array $arParams Параметры компонента.
-     * @param array $arFilter Фильтр для получения элементов инфоблока.
-     */
-    private function addSectionToFilter(&$arParams, &$arFilter)
-    {
-        if ($arParams["PARENT_SECTION"] > 0) {
-            /*
-            * Сохранить раздел в фильтре. 
-            */
-            $arFilter["SECTION_ID"] = $arParams["PARENT_SECTION"];
-            /*
-            * Указать в фильтре, показывать ли элементы подразделов указанного раздела. 
-            */
-            if ($arParams["INCLUDE_SUBSECTIONS"]) {
-                $arFilter["INCLUDE_SUBSECTIONS"] = "Y";
-            }
-            
-            $this->addSectionPath($arParams);
-
-            $ipropValues = new Iblock\InheritedProperty\SectionValues($this->arResult["ID"], $arParams["PARENT_SECTION"]);
-            $this->arResult["IPROPERTY_VALUES"] = $ipropValues->getValues();
-        } else {
-            $this->arResult["SECTION"]= false;
-        }
-    }
-
-    /**
-     * Добавить значения для arResult[SECTION][PATH] из полученного раздела.
-     * @param array $arParams Параметры компонента.
-     */
-    private function addSectionPath($arParams)
-    {
-        $this->arResult["SECTION"] = array("PATH" => array());
-        $rsPath = CIBlockSection::GetNavChain(
-            $this->arResult["ID"],
-            $arParams["PARENT_SECTION"],
-            [
-                'ID',
-                'IBLOCK_ID',
-                'NAME',
-                'SECTION_PAGE_URL',
-            ]
-        );
-        /*
-         * Применение шаблона полученного пути. 
-         */
-        $rsPath->SetUrlTemplates("", $arParams["SECTION_URL"], $arParams["IBLOCK_URL"]);
-        /*
-         * Запись пути в $arResult. 
-         */
-        while ($arPath = $rsPath->GetNext()) {
-            $ipropValues = new Iblock\InheritedProperty\SectionValues($arParams["IBLOCK_ID"], $arPath["ID"]);
-            $arPath["IPROPERTY_VALUES"] = $ipropValues->getValues();
-            $this->arResult["SECTION"]["PATH"][] = $arPath;
-        }
-        unset($arPath, $rsPath);
-    }
-
 
 
 
