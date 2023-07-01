@@ -43,42 +43,12 @@ if ($this->startResultCache(
 ) {
     $resultOfMakingArray = $this->makeArResult($arParams);
     /*
-     * Если было возвращено false, то необходимо остановить обработку компонента. 
+     * Если было возвращено false, то необходимо остановить обработку компонента.
      */
     if ($resultOfMakingArray === false) {
         return;
     }
-
     $arResult = $this->arResult;
-
-    /**
-     * -----------
-     * --УДАЛИТЬ--
-     * -----------
-     */
-    $arSelect = $this->arSelect;
-    $bGetProperty = $this->bGetProperty;
-    $arFilter = $this->arFilter;
-    $arSort = $this->arSort;
-    $shortSelect = $this->shortSelect;
-    $listPageUrl = $this->listPageUrl;
-
-    ShowError("arSelect: <br>");
-    ShowError(var_dump($arSelect));
-    ShowError("<br> bGetProperty: <br>");
-    ShowError(var_dump($bGetProperty));
-    ShowError("<br> arSort: <br>");
-    ShowError(var_dump($arSort));
-    ShowError("<br> Фильтр: <br>");
-    ShowError(var_dump($arFilter));
-    ShowError("<br> Result: <br>");
-    ShowError(var_dump($arResult));
-    ShowError("<br> shortSelect: <br>");
-    ShowError(var_dump($shortSelect));
-    ShowError("<br> listPageUrl: <br>");
-    ShowError(var_dump($listPageUrl));
-    ShowError("<br><br>");
-
     /*
      * Подключение шаблона компонента. 
      */

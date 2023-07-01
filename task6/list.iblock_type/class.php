@@ -37,22 +37,6 @@ class CTraineeList extends CBitrixComponent
      */
     public $arResult;
 
-
-
-    /**
-     * ---------------
-     * ----УДАЛИТЬ----
-     * ---------------
-     */
-    public $arSelect;
-    public $bGetProperty;
-    public $arFilter;
-    public $arSort;
-    public $shortSelect;
-    public $listPageUrl;
-
-
-
     /**
      * Выполнить предварительные настройки перед началом работы с компонентом.
      * @param array $arParams Массив параметров, передаваемых при вызове компонента.
@@ -177,25 +161,6 @@ class CTraineeList extends CBitrixComponent
          * Указать, какие ключи массива $arResult должны кешироваться. 
          */
         $this->setResultCachedKeys();
-
-        /**
-         * ----------------
-         * -----УДАЛИТЬ----
-         * ----------------
-         */
-        $this->arSelect = $arSelect;
-        $this->bGetProperty = $bGetProperty;
-        $this->arFilter = $arFilter;
-        $this->arSort = $arSort;
-        $this->shortSelect = $shortSelect;
-        $this->listPageUrl = $listPageUrl;
-
-        /**
-         * 
-         * 
-         * ПРОДОЛЖИТЬ ЗДЕСЬ
-         * 
-         */
     }
 
     /**

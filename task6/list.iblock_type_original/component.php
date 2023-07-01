@@ -663,22 +663,6 @@ if($this->startResultCache(false, array(($arParams["CACHE_GROUPS"]==="N"? false:
         "ITEMS_TIMESTAMP_X",
     ));
 
-    ShowError("arSelect: <br>");
-    ShowError(var_dump($arSelect));
-    ShowError("<br> bGetProperty: <br>");
-    ShowError(var_dump($bGetProperty));
-    ShowError("<br> arSort: <br>");
-    ShowError(var_dump($arSort));
-    ShowError("<br> Фильтр: <br>");
-    ShowError(var_dump($arFilter));
-    ShowError("<br> Result: <br>");
-    ShowError(var_dump($arResult));
-    ShowError("<br> shortSelect: <br>");
-    ShowError(var_dump($shortSelect));
-    ShowError("<br> listPageUrl: <br>");
-    ShowError(var_dump($listPageUrl));
-    ShowError("<br><br>");
-
     /*
      * Подключение шаблона компонента. 
      */
