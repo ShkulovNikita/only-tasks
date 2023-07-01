@@ -109,11 +109,11 @@ class CTraineeList extends CBitrixComponent
         /*
          * Список выводимых элементов инфоблоков. 
          */
-        $arResult["ITEMS"] = array();
+        $this->arResult["ITEMS"] = array();
         /*
          * Идентификаторы элементов из $arResult["ITEMS"]. 
          */
-        $arResult["ELEMENTS"] = array();
+        $this->arResult["ELEMENTS"] = array();
         /*
          * Выполнить запрос на выборку элементов с коротким списком полей.
          */
@@ -161,6 +161,83 @@ class CTraineeList extends CBitrixComponent
          * Указать, какие ключи массива $arResult должны кешироваться. 
          */
         $this->setResultCachedKeys();
+    }
+
+    /**
+     * Выполнить действия, требуемые при введенном пользователем идентификаторе
+     * инфоблока.
+     * @param bool $isAuthorized Авторизован ли текущий пользователь.
+     * @param array $arParams Параметры компонента.
+     * @return array Массив $arResult["ELEMENTS"].
+     */
+    public function processChosenIblockID($isAuthorized, $arParams)
+    {
+        global $APPLICATION;
+
+        $arTitleOptions = null;
+        if ($isAuthorized) {
+            if (
+                $APPLICATION->GetShowIncludeAreas()
+                || (is_object($GLOBALS["INTRANET_TOOLBAR"]) && $arParams["INTRANET_TOOLBAR"] !== "N")
+                || $arParams["SET_TITLE"]
+            ) {
+                if (Loader::includeModule("iblock")) {
+                    /*
+                     * Получить набор кнопок для управления выбранным инфоблоком. 
+                     */
+                    $arButtons = $this->getIblockButtons($arParams);
+                    /*
+                     * Отобразить кнопки для включаемых областей.
+                     */
+                    if ($APPLICATION->GetShowIncludeAreas()) {
+                        $this->addIncludeAreaIcons(CIBlock::GetComponentMenu($APPLICATION->GetPublicShowMode(), $arButtons));
+                    }
+                    /*
+                     * Задание параметров тулбара, если требуется. 
+                     */
+                    $this->setToolbar($arButtons, $arParams);
+                    /*
+                     * Задание параметров заголовка страницы, если требуется. 
+                     */
+                    $arTitleOptions = $this->setPageTitleParams($arButtons, $arParams);
+                }
+            }
+        }
+
+        /*
+         * Возвращение шаблону кешированных данных. 
+         */
+        $this->setTemplateCachedData($this->arResult["NAV_CACHED_DATA"]);
+
+        $ipropertyExists = (!empty($this->arResult["IPROPERTY_VALUES"]) && is_array($this->arResult["IPROPERTY_VALUES"]));
+        $iproperty = ($ipropertyExists ? $this->arResult["IPROPERTY_VALUES"] : array());
+        /*
+         * Задание заголовка страницы компонентом. 
+         */
+        $this->setPageTitle($arParams, $ipropertyExists, $iproperty, $arTitleOptions);
+        /*
+         * Задание CEO-параметров страницы. 
+         */
+        if ($ipropertyExists) {
+            $this->setIproperties($iproperty, $arParams, $arTitleOptions);
+        }
+        /*
+         * Добавить имя инфоблока в цепочку навигации, если требуется.
+         */
+        $this->addIblockToNavChain($arParams);
+        /*
+         * Добавление имен разделов в цепочку навигации. 
+         */
+        $this->addSectionsToNavChain($arParams);
+        
+        if ($arParams["SET_LAST_MODIFIED"] && $this->arResult["ITEMS_TIMESTAMP_X"]) {
+            Context::getCurrent()->getResponse()->setLastModified($this->arResult["ITEMS_TIMESTAMP_X"]);
+        }
+
+        unset($iproperty);
+        unset($ipropertyExists);
+
+        return $this->arResult["ELEMENTS"];
     }
 
     /**
@@ -857,7 +934,7 @@ class CTraineeList extends CBitrixComponent
             $time = DateTime::createFromUserTime($arItem["TIMESTAMP_X"]);
             if (
                 !isset($this->arResult["ITEMS_TIMESTAMP_X"])
-                || $time->getTimestamp() > $this->$arResult["ITEMS_TIMESTAMP_X"]->getTimestamp()
+                || $time->getTimestamp() > $this->arResult["ITEMS_TIMESTAMP_X"]->getTimestamp()
             ) {
                 $this->arResult["ITEMS_TIMESTAMP_X"] = $time;
             }
@@ -1006,5 +1083,138 @@ class CTraineeList extends CBitrixComponent
             "IPROPERTY_VALUES",
             "ITEMS_TIMESTAMP_X",
         ));
+    }
+
+    /**
+     * Получить набор кнопок для управления выбранным инфоблоком.
+     * @param array $arParams Параметры компонента.
+     * @return array Массив, описывающий набор кнопок для управления элементами инфоблока.
+     */
+    private function getIblockButtons($arParams)
+    {
+        return CIBlock::GetPanelButtons(
+            $this->arResult["ID"], // ID выбранного инфоблока.
+            0, // ID элемента
+            $arParams["PARENT_SECTION"], // ID раздела
+            array("SECTION_BUTTONS" => false)
+        );
+    }
+
+    /**
+     * Задание параметров тулбара.
+     * @param array $arButtons Массив, описывающий набор кнопок для управления элементами инфоблока.
+     * @param array $arParams Параметры компонента.
+     */
+    private function setToolbar($arButtons, $arParams)
+    {
+        if (
+            is_array($arButtons["intranet"])
+            && is_object($INTRANET_TOOLBAR)
+            && $arParams["INTRANET_TOOLBAR"] !== "N"
+        ) {
+            $APPLICATION->AddHeadScript('/bitrix/js/main/utils.js');
+            foreach ($arButtons["intranet"] as $arButton) {
+                $INTRANET_TOOLBAR->AddButton($arButton);
+            }
+        }
+    }
+
+    /**
+     * Задание параметров установки заголовка страницы компонентом.
+     * @param array $arButtons Массив, описывающий набор кнопок для управления элементами инфоблока.
+     * @param array $arParams Параметры компонента.
+     * @return array Параметры задания заголовка страницы.
+     */
+    private function setPageTitleParams($arButtons, $arParams)
+    {
+        if ($arParams["SET_TITLE"]) {
+            if (isset($arButtons["submenu"]["edit_iblock"])) {
+                /* 
+                 * Сохранить в $arTitleOptions ссылку на редактирование инфоблока в админке.
+                 */
+                return [
+                    'ADMIN_EDIT_LINK' => $arButtons["submenu"]["edit_iblock"]["ACTION"],
+                    'PUBLIC_EDIT_LINK' => "",
+                    'COMPONENT_NAME' => $this->getName(),
+                ];
+            }
+        }
+    }
+
+    /**
+     * Задание заголовка страницы компонентом.
+     * @param array $arParams Параметры компонента.
+     * @param bool $ipropertyExists Наличие свойств SEO.
+     * @param array $iproperty Массив, содержащий SEO информацию.
+     * @param array $arTitleOptions Параметры задания заголовка страницы.
+     */
+    private function setPageTitle($arParams, $ipropertyExists, $iproperty, $arTitleOptions)
+    {
+        global $APPLICATION;
+        if ($arParams["SET_TITLE"]) {
+            if ($ipropertyExists && $iproperty["SECTION_PAGE_TITLE"] != "") {
+                $APPLICATION->SetTitle($iproperty["SECTION_PAGE_TITLE"], $arTitleOptions);
+            } elseif(isset($this->arResult["NAME"])) {
+                $APPLICATION->SetTitle($this->arResult["NAME"], $arTitleOptions);
+            }
+        }
+    }
+
+    /**
+     * Задание SEO информации страницы.
+     * @param array $iproperty Массив, содержащий SEO информацию.
+     * @param array $arParams Параметры компонента.
+     * @param array $arTitleOptions Параметры задания заголовков.
+     */
+    private function setIproperties($iproperty, $arParams, $arTitleOptions)
+    {
+        global $APPLICATION;
+        if ($arParams["SET_BROWSER_TITLE"] === 'Y' && $iproperty["SECTION_META_TITLE"] != "") {
+            $APPLICATION->SetPageProperty("title", $iproperty["SECTION_META_TITLE"], $arTitleOptions);
+        }
+        if ($arParams["SET_META_KEYWORDS"] === 'Y' && $iproperty["SECTION_META_KEYWORDS"] != "") {
+            $APPLICATION->SetPageProperty("keywords", $iproperty["SECTION_META_KEYWORDS"], $arTitleOptions);
+        }
+        if ($arParams["SET_META_DESCRIPTION"] === 'Y' && $iproperty["SECTION_META_DESCRIPTION"] != "") {
+            $APPLICATION->SetPageProperty("description", $iproperty["SECTION_META_DESCRIPTION"], $arTitleOptions);
+        }
+    }
+
+    /**
+     * Добавление имени инфоблока в цепочку навигации, если требуется.
+     * @param array $arParams Параметры компонента.
+     */
+    private function addIblockToNavChain($arParams)
+    {
+        global $APPLICATION;
+        if ($arParams["INCLUDE_IBLOCK_INTO_CHAIN"] && isset($this->arResult["NAME"])) {
+            if ($arParams["ADD_SECTIONS_CHAIN"] && is_array($this->arResult["SECTION"])) {
+                $APPLICATION->AddChainItem(
+                    $this->arResult["NAME"],
+                    $arParams["IBLOCK_URL"] <> ''? $arParams["IBLOCK_URL"] : $this->arResult["LIST_PAGE_URL"]
+                );
+            } else {
+                $APPLICATION->AddChainItem($this->arResult["NAME"]);
+            }
+        }
+    }
+
+    /**
+     * Добавление имен разделов в цепочку навигации.
+     * @param array $arParams Параметры компонента.
+     */
+    private function addSectionsToNavChain($arParams)
+    {
+        global $APPLICATION;
+        if ($arParams["ADD_SECTIONS_CHAIN"] && is_array($this->arResult["SECTION"])) {
+            foreach ($this->arResult["SECTION"]["PATH"] as $arPath) {
+                if ($arPath["IPROPERTY_VALUES"]["SECTION_PAGE_TITLE"] != "") {
+                    $APPLICATION->AddChainItem($arPath["IPROPERTY_VALUES"]["SECTION_PAGE_TITLE"], $arPath["~SECTION_PAGE_URL"]);
+                }
+                else {
+                    $APPLICATION->AddChainItem($arPath["NAME"], $arPath["~SECTION_PAGE_URL"]);
+                }
+            }
+        }
     }
 }
