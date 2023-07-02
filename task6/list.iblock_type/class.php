@@ -84,15 +84,14 @@ class CTraineeList extends CBitrixComponent
         /*
          * Если не задан ID инфоблока, то получить заданный тип инфоблока.
          */
-        
         $getIblockResult;
         if ($arParams["IBLOCK_ID"] == '') {
             $getIblockResult = $this->getIblockType($arParams);
             $this->iblockSource = "type";
+        /*
+         * Получить инфоблок, ID или код которого был передан в arParams.
+         */
         } else {
-            /*
-             * Получить инфоблок, ID или код которого был передан в arParams.
-             */
             $getIblockResult = $this->getIblock($arParams);
             $this->iblockSource = "iblock";
         }
@@ -177,11 +176,22 @@ class CTraineeList extends CBitrixComponent
              * Если есть массив свойств, то записать свойства в $arResult[ITEMS]. 
              */
             $this->setElementProperties($bGetProperty, $elementFilter);
+        /*
+         * Если ничего не найдено, то вывести соответствующее сообщение. 
+         */
+        } else {
+            $this->abortResultCache();
+            ShowError(GetMessage("T_IBLOCK_TYPE_LIST_IBLOCK_ELEMENTS_NA"));
+            return false;
         }
         /*
          * Заполнить значения свойств. 
          */
         $this->fillElementProperties($bGetProperty, $arParams);
+        /*
+         * Рассортировать элементы инфоблоков по их инфоблокам в $arResult["ITEMS"]. 
+         */
+        $this->sortIblockElements();
         /*
          * Обработка ссылок для постраничной навигации. 
          */
@@ -765,7 +775,6 @@ class CTraineeList extends CBitrixComponent
             if ($arParams["INCLUDE_SUBSECTIONS"]) {
                 $arFilter["INCLUDE_SUBSECTIONS"] = "Y";
             }
-            
             $this->addSectionPath($arParams);
 
             $ipropValues = new Iblock\InheritedProperty\SectionValues($this->arResult["ID"], $arParams["PARENT_SECTION"]);
@@ -1083,6 +1092,39 @@ class CTraineeList extends CBitrixComponent
         if ($bGetProperty) {
             \CIBlockFormatProperties::clearCache();
         }
+    }
+
+    /**
+     * Рассортировать полученные элементы инфоблоков в подмассивы $arResult["ITEMS"]
+     * с ID инфоблоков в качестве ключей.
+     */
+    private function sortIblockElements()
+    {
+        /*
+         * Вспомогательный массив для сортировки. 
+         */
+        $arTemp = [];
+        /*
+         * Перебрать все полученные элементы инфоблоков. 
+         */
+        foreach ($this->arResult["ITEMS"] as $arElement) {
+            /*
+             * Если ID инфоблока для массива сортировки новый, то добавить элемент-подмассив.
+             */
+            if (!array_key_exists($arElement["IBLOCK_ID"], $arTemp)) {
+                $arTemp[$arElement["IBLOCK_ID"]] = [];
+                $arTemp[$arElement["IBLOCK_ID"]][] = $arElement;
+            /*
+             * Иначе добавить элемент в существующий подмассив.
+             */
+            } else {
+                $arTemp[$arElement["IBLOCK_ID"]][] = $arElement;
+            }
+        }
+        /*
+         * Записать в ITEMS результат сортировки. 
+         */
+        $this->arResult["ITEMS"] = $arTemp;
     }
 
     /**
