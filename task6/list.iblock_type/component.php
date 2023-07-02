@@ -24,8 +24,6 @@ $this->prepareComponent($arParams);
 
 /*
  * Если нет валидного кеша, то создать, либо использовать существующий кеш для заполнения $arParams. 
- * @param bool Время кеширования.
- * @param array От чего дополнительно зависит кеш.
  */
 if (
     $this->startResultCache(
@@ -53,7 +51,7 @@ if (
 }
 
 /*
- * Если задан идентификатор инфоблока. 
+ * Если задан идентификатор типа или инфоблока. 
  */
 if (isset($this->arResult["ID"])) {
     $isAuthorized = $USER->IsAuthorized();

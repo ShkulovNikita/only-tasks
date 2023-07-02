@@ -36,6 +36,12 @@ class CTraineeList extends CBitrixComponent
      * @var array
      */
     public $arResult;
+    /**
+     * Принимает значение "type", если элементы инфоблоков вытаскиваются по типу,
+     * либо "iblock", если по конкретному инфоблоку.
+     * @var string
+     */
+    public $iblockSource;
 
     /**
      * Выполнить предварительные настройки перед началом работы с компонентом.
@@ -69,9 +75,30 @@ class CTraineeList extends CBitrixComponent
             return false;
         }
         /*
-         * Получить инфоблок, ID или код которого был передан в arParams.
+         * Если не задан тип инфоблока, то остановить выполнение компонента. 
          */
-        $getIblockResult = $this->getIblock($arParams);
+        $iblockTypeIsSet = $this->checkIfIblockTypeIsSet($arParams);
+        if (!$iblockTypeIsSet) {
+            return false;
+        }
+        /*
+         * Если не задан ID инфоблока, то получить заданный тип инфоблока.
+         */
+        
+        $getIblockResult;
+        if ($arParams["IBLOCK_ID"] == '') {
+            $getIblockResult = $this->getIblockType($arParams);
+            $this->iblockSource = "type";
+        } else {
+            /*
+             * Получить инфоблок, ID или код которого был передан в arParams.
+             */
+            $getIblockResult = $this->getIblock($arParams);
+            $this->iblockSource = "iblock";
+        }
+        /*
+         * Если не удалось получить инфоблок или тип, то остановить выполнение компонента.
+         */
         if ($getIblockResult === false) {
             return false;
         }
@@ -121,15 +148,22 @@ class CTraineeList extends CBitrixComponent
         /*
          * Если в результате запроса были получены элементы инфоблока. 
          */
-        if (!empty($this->arResult['ITEMS'])) {
+        if (!empty($this->arResult["ITEMS"])) {
             /*
-             * $elementFilter содержит идентификаторы инфоблока, сайта и полученных элементов. 
+             * $elementFilter содержит идентификаторы сайта и полученных элементов. 
              */
             $elementFilter = array(
-                "IBLOCK_ID" => $this->arResult["ID"],
                 "IBLOCK_LID" => SITE_ID,
                 "ID" => $this->arResult["ELEMENTS"]
             );
+            /*
+             * Также фильтровать по типу или инфоблоку. 
+             */
+            if ($this->iblockSource == "type") {
+                $elementFilter["IBLOCK_TYPE"] = $this->arResult["ID"];
+            } else {
+                $elementFilter["IBLOCK_ID"] = $this->arResult["ID"];
+            }
             /*
              * Получить элементы со всеми требуемыми полями. 
              */
@@ -165,7 +199,7 @@ class CTraineeList extends CBitrixComponent
 
     /**
      * Выполнить действия, требуемые при введенном пользователем идентификаторе
-     * инфоблока.
+     * инфоблока или типа.
      * @param bool $isAuthorized Авторизован ли текущий пользователь.
      * @param array $arParams Параметры компонента.
      * @return array Массив $arResult["ELEMENTS"].
@@ -250,14 +284,10 @@ class CTraineeList extends CBitrixComponent
             $arParams["CACHE_TIME"] = 36000000;
         }
 
-        $arParams["IBLOCK_TYPE"] = trim($arParams["IBLOCK_TYPE"] ?? '');
-        if (empty($arParams["IBLOCK_TYPE"])) {
-            $arParams["IBLOCK_TYPE"] = "news";
-        }
-
         $this->setDefaultSort1($arParams);
         $this->setDefaultSort2($arParams);
 
+        $arParams["IBLOCK_TYPE"] = trim($arParams["IBLOCK_TYPE"] ?? '');
         $arParams["IBLOCK_ID"] = trim($arParams["IBLOCK_ID"] ?? '');
         $arParams["PARENT_SECTION"] = (int)($arParams["PARENT_SECTION"] ?? 0);
         $arParams["PARENT_SECTION_CODE"] ??= '';
@@ -467,9 +497,24 @@ class CTraineeList extends CBitrixComponent
      */
     private function checkIblockModule()
     {
-        if(!Loader::includeModule("iblock")) {
+        if (!Loader::includeModule("iblock")) {
             $this->abortResultCache();
             ShowError(GetMessage("IBLOCK_TYPE_IBLOCK_MODULE_NOT_INSTALLED"));
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Проверить, задан ли какой-либо тип инфоблока.
+     * @param array $arParams Параметры компонента.
+     * @return bool true, если задан; false, если не задан.
+     */
+    private function checkIfIblockTypeIsSet($arParams)
+    {
+        if (!isset($arParams["IBLOCK_TYPE"])) {
+            $this->abortResultCache();
+            ShowError(GetMessage("T_IBLOCK_TYPE_LIST_TYPE_NA"));
             return false;
         }
         return true;
@@ -486,7 +531,7 @@ class CTraineeList extends CBitrixComponent
          * Если код инфоблока задан числом, то получить инфоблок по идентификатору,
          * иначе получить инфоблок по символьному коду. 
          */
-        if(is_numeric($arParams["IBLOCK_ID"])) {
+        if (is_numeric($arParams["IBLOCK_ID"])) {
             $rsIBlock = CIBlock::GetList(array(), array(
                 "ACTIVE" => "Y",
                 "ID" => $arParams["IBLOCK_ID"],
@@ -509,6 +554,34 @@ class CTraineeList extends CBitrixComponent
             $this->abortResultCache();
             Iblock\Component\Tools::process404(
                 trim($arParams["MESSAGE_404"]) ?: GetMessage("T_IBLOCK_TYPE_LIST_NA")
+                ,true
+                ,$arParams["SET_STATUS_404"] === "Y"
+                ,$arParams["SHOW_404"] === "Y"
+                ,$arParams["FILE_404"]
+            );
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Получить тип инфоблока.
+     * @param array $arParams Параметры компонента.
+     * @return bool true - тип был успешно получен, false - ошибка.
+     */
+    private function getIblockType($arParams)
+    {
+        $rsType = CIBlockType::GetList(
+            [],
+            ["=ID" => $arParams["IBLOCK_TYPE"]]
+        );
+        $this->arResult = $rsType->GetNext();
+
+        if (!$this->arResult) {
+            $this->abortResultCache();
+            Iblock\Component\Tools::process404(
+                trim($arParams["MESSAGE_404"]) ?: GetMessage("T_IBLOCK_TYPE_LIST_TYPE_NA")
                 ,true
                 ,$arParams["SET_STATUS_404"] === "Y"
                 ,$arParams["SHOW_404"] === "Y"
@@ -553,14 +626,21 @@ class CTraineeList extends CBitrixComponent
     private function setFilter(&$arParams)
     {
         /*
-         * Включить в фильтр идентификаторы инфоблока, сайта, активность и права доступа. 
+         * Включить в фильтр ID сайта, активность и права доступа. 
          */
         $arFilter = array(
-            "IBLOCK_ID" => $this->arResult["ID"],
             "IBLOCK_LID" => SITE_ID,
             "ACTIVE" => "Y",
             "CHECK_PERMISSIONS" => $arParams['CHECK_PERMISSIONS'] ? "Y" : "N",
         );
+        /*
+         * Фильтрация по типу или инфоблоку. 
+         */
+        if ($this->iblockSource == "type") {
+            $arFilter["IBLOCK_TYPE"] = $this->arResult["ID"];
+        } else {
+            $arFilter["IBLOCK_ID"] = $this->arResult["ID"];
+        }
         /*
          * Если выбрано "Показывать только активные на данный момент элементы",
          * то дополнить фильтр. 
@@ -571,9 +651,11 @@ class CTraineeList extends CBitrixComponent
         /*
          * Добавить в фильтр параметры раздела, если требуется. 
          */
-        $checkParentSectionResult = $this->checkParentSection($arParams, $arFilter);
-        if ($checkParentSectionResult === false) {
-            return false;
+        if ($this->iblockSource == "iblock") {
+            $checkParentSectionResult = $this->checkParentSection($arParams, $arFilter);
+            if ($checkParentSectionResult === false) {
+                return false;
+            }
         }
 
         return $arFilter;
@@ -771,7 +853,7 @@ class CTraineeList extends CBitrixComponent
         $rsElement = CIBlockElement::GetList(
             $arSort, 
             array_merge(
-                $arFilter, 
+                $arFilter,
                 $this->arrFilter
             ), 
             false, 
@@ -965,7 +1047,7 @@ class CTraineeList extends CBitrixComponent
      */
     private function fillElementProperties($bGetProperty, $arParams)
     {
-        $this->arResult['ITEMS'] = array_values($this->arResult['ITEMS']);
+        $this->arResult["ITEMS"] = array_values($this->arResult["ITEMS"]);
         foreach ($this->arResult["ITEMS"] as &$arItem) {
             /*
              * Заполнить значения свойств для отображения. 
