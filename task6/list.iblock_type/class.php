@@ -292,15 +292,17 @@ class CTraineeList extends CBitrixComponent
     {
         if (!isset($arParams['CACHE_TIME'])) {
             $arParams['CACHE_TIME'] = 36000000;
+        } else {
+            $this->setDefaultInt($arParams['CACHE_TIME'], 36000000, 'CACHE_TIME');
         }
 
         $this->setDefaultSort1($arParams);
         $this->setDefaultSort2($arParams);
+        $this->setDefaultString($arParams['IBLOCK_TYPE'], 'news', 50, 'IBLOCK_TYPE');
+        $this->setDefaultInt($arParams['IBLOCK_ID'], '', 'IBLOCK_ID');
+        $this->setDefaultInt($arParams['PARENT_SECTION'], 0, 'PARENT_SECTION');
+        $this->setDefaultString($arParams['PARENT_SECTION_CODE'], '', 100, 'PARENT_SECTION_CODE');
 
-        $arParams['IBLOCK_TYPE'] = trim($arParams['IBLOCK_TYPE'] ?? '');
-        $arParams['IBLOCK_ID'] = trim($arParams['IBLOCK_ID'] ?? '');
-        $arParams['PARENT_SECTION'] = (int)($arParams['PARENT_SECTION'] ?? 0);
-        $arParams['PARENT_SECTION_CODE'] ??= '';
         $arParams['INCLUDE_SUBSECTIONS'] = ($arParams['INCLUDE_SUBSECTIONS'] ?? '') !== 'N';
         $arParams['SET_LAST_MODIFIED'] = ($arParams['SET_LAST_MODIFIED'] ?? '') === 'Y';
         $arParams['SET_TITLE'] = ($arParams['SET_TITLE'] ?? '') !== 'N';
@@ -314,34 +316,38 @@ class CTraineeList extends CBitrixComponent
         if (empty($arParams['ACTIVE_DATE_FORMAT'])) {
             $arParams['ACTIVE_DATE_FORMAT'] = $DB->DateFormatToPHP(\CSite::GetDateFormat('SHORT'));
         }
-        $arParams['PREVIEW_TRUNCATE_LEN'] = (int)($arParams['PREVIEW_TRUNCATE_LEN'] ?? 0);
+
+        $this->setDefaultInt($arParams['PREVIEW_TRUNCATE_LEN'], 0, 'PREVIEW_TRUNCATE_LEN');
+
         $arParams['HIDE_LINK_WHEN_NO_DETAIL'] = ($arParams['HIDE_LINK_WHEN_NO_DETAIL'] ?? '') === 'Y';
         $arParams['CHECK_DATES'] = ($arParams['CHECK_DATES'] ?? '') !== 'N';
         $arParams['DISPLAY_TOP_PAGER'] = ($arParams['DISPLAY_TOP_PAGER'] ?? '') === 'Y';
         $arParams['DISPLAY_BOTTOM_PAGER'] = ($arParams['DISPLAY_BOTTOM_PAGER'] ?? '') !== 'N';
-        $arParams['PAGER_TITLE'] = trim($arParams['PAGER_TITLE'] ?? '');
         $arParams['PAGER_SHOW_ALWAYS'] = ($arParams['PAGER_SHOW_ALWAYS'] ?? '') === 'Y';
-        $arParams['PAGER_TEMPLATE'] = trim($arParams['PAGER_TEMPLATE'] ?? '');
         $arParams['PAGER_DESC_NUMBERING'] = ($arParams['PAGER_DESC_NUMBERING'] ?? '') === 'Y';
-        $arParams['PAGER_DESC_NUMBERING_CACHE_TIME'] = (int)($arParams['PAGER_DESC_NUMBERING_CACHE_TIME'] ?? 0);
         $arParams['PAGER_SHOW_ALL'] = ($arParams['PAGER_SHOW_ALL'] ?? '') === 'Y';
         $arParams['PAGER_BASE_LINK_ENABLE'] ??= 'N';
-        $arParams['PAGER_BASE_LINK'] ??= '';
-        $arParams['INTRANET_TOOLBAR'] ??= '';
+        $this->setDefaultString($arParams['PAGER_TITLE'], '', 255, 'PAGER_TITLE');
+        $this->setDefaultString($arParams['PAGER_TEMPLATE'], '', 255, 'PAGER_TEMPLATE');
+        $this->setDefaultInt($arParams['PAGER_DESC_NUMBERING_CACHE_TIME'], 0, 'PAGER_DESC_NUMBERING_CACHE_TIME');
+        $this->setDefaultString($arParams['PAGER_BASE_LINK'], '', 255, 'PAGER_BASE_LINK');
+        $this->setDefaultString($arParams['INTRANET_TOOLBAR'], '', 255, 'INTRANET_TOOLBAR');
+
         $arParams['CHECK_PERMISSIONS'] = ($arParams['CHECK_PERMISSIONS'] ?? '') !== 'N';
-        $arParams['MESSAGE_404'] ??= '';
+        
+        $this->setDefaultString($arParams['MESSAGE_404'], '', 255, 'MESSAGE_404');
+        $this->setDefaultString($arParams['FILE_404'], '', 255, 'FILE_404');
         $arParams['SET_STATUS_404'] ??= 'N';
         $arParams['SHOW_404'] ??= 'N';
-        $arParams['FILE_404'] ??= '';
 
         $this->setDefaultFieldCode($arParams);
         $this->setDefaultPropertyCode($arParams);
+        
+        $this->setDefaultString($arParams['DETAIL_URL'], '', 255, 'DETAIL_URL');
+        $this->setDefaultString($arParams['SECTION_URL'], '', 255, 'SECTION_URL');
+        $this->setDefaultString($arParams['IBLOCK_URL'], '', 255, 'IBLOCK_URL');
 
-        $arParams['DETAIL_URL'] = trim($arParams['DETAIL_URL'] ?? '');
-        $arParams['SECTION_URL'] = trim($arParams['SECTION_URL'] ?? '');
-        $arParams['IBLOCK_URL'] = trim($arParams['IBLOCK_URL'] ?? '');
-
-        $arParams['NEWS_COUNT'] = (int)($arParams['NEWS_COUNT'] ?? 0);
+        $this->setDefaultInt($arParams['NEWS_COUNT'], 0, 'NEWS_COUNT');
         if ($arParams['NEWS_COUNT'] <= 0) {
             $arParams['NEWS_COUNT'] = 20;
         }
@@ -355,7 +361,49 @@ class CTraineeList extends CBitrixComponent
             $arParams['CACHE_TIME'] = 0;
         }
 
-        $arParams['CACHE_GROUPS'] ??= '';
+        $this->setDefaultString($arParams['CACHE_GROUPS'], '', 1, 'CACHE_GROUPS');
+    }
+
+    /**
+     * Выполнить валидацию и установить значение по умолчанию (при необходимости)
+     * для параметра строкового типа.
+     * @param string $param Значение параметра.
+     * @param int $charLimit Максимальная длина строки.
+     * @param string $name Имя для поиска сообщения об ошибке для данного параметра.
+     */
+    private function setDefaultString(&$param, $defaultValue, $charLimit, $name)
+    {
+        /*
+         * Удалить пробелы в начале и конце параметра. 
+         */
+        $param = trim($param ?? $defaultValue);
+        /*
+         * Проверить соответствие по длине. 
+         */
+        if (mb_strlen($param) > $charLimit) {
+            ShowError(GetMessage('T_IBLOCK_TYPE_LIST_' . $name . '_INCORRECT_LENGTH'));
+            $param = $defaultValue;
+        }
+    }
+
+    /**
+     * Валидация и установка значения по умолчанию для параметра числового типа.
+     * @param int $param Значение параметра.
+     * @param int $defaultValue Значение по умолчанию.
+     * @param string $name Имя для поиска сообщения об ошибке для данного параметра.
+     */
+    private function setDefaultInt(&$param, $defaultValue, $name)
+    {
+        $param = trim($param ?? '');
+        if ($param == '') {
+            $param = $defaultValue;
+        } else {
+            $param = filter_var($param, FILTER_VALIDATE_INT);
+            if ($param === false) {
+                ShowError(GetMessage('T_IBLOCK_TYPE_LIST_' . $name . '_IS_NOT_INT'));
+                $param = $defaultValue;
+            }
+        }
     }
 
     /**
