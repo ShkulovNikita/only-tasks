@@ -1,5 +1,5 @@
 <?php
-if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) {
+if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true) {
     die();
 }
 /** @var CBitrixComponent $this */
@@ -29,7 +29,7 @@ if (
     $this->startResultCache(
         false, 
         array(
-            ($arParams["CACHE_GROUPS"]==="N"? false: $USER->GetGroups()), 
+            ($arParams['CACHE_GROUPS'] === 'N'? false: $USER->GetGroups()), 
             $this->bUSER_HAVE_ACCESS, 
             $this->arNavigation, 
             $this->arrFilter, 
@@ -53,7 +53,7 @@ if (
 /*
  * Если задан идентификатор типа или инфоблока. 
  */
-if (isset($this->arResult["ID"])) {
+if (isset($this->arResult['ID'])) {
     $isAuthorized = $USER->IsAuthorized();
 
     return $this->processChosenIblockID($isAuthorized, $arParams);

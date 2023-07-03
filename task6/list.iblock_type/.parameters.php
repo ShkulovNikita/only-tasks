@@ -11,7 +11,6 @@ use Bitrix\Main\Loader;
 if (!Loader::includeModule('iblock')) {
     return;
 }
-
 /*
  * Проверка задания и корректности идентификатора инфоблока для списка. 
  */

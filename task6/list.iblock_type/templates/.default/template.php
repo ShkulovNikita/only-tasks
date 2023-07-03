@@ -115,12 +115,4 @@ $this->setFrameMode(true);
     <?php if ($arParams["DISPLAY_BOTTOM_PAGER"]) { ?>
         <br /><?=$arResult["NAV_STRING"]?>
     <? } ?>
-    <br><br>
-    <?php echo "Входные параметры:"; ?>
-    <br>
-    <?php print_r($arParams); ?>
-    <br><br>
-    <?php echo "arResult:"; ?>
-    <br>
-    <?php print_r($arResult); ?>
 </div>
