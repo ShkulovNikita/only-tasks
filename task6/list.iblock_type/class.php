@@ -44,6 +44,56 @@ class CTraineeList extends CBitrixComponent
     public $iblockSource;
 
     /**
+     * Код, исполняемый при вызове компонента.
+     */
+    public function executeComponent()
+    {
+        global $INTRANET_TOOLBAR;
+        global $USER;
+
+        $this->prepareComponent($this->arParams);
+
+        /*
+         * Если нет валидного кеша, то создать, либо использовать существующий кеш для заполнения $arParams. 
+         */
+        if (
+            $this->startResultCache(
+                false, 
+                array(
+                    ($this->arParams['CACHE_GROUPS'] === 'N'? false: $USER->GetGroups()), 
+                    $this->bUSER_HAVE_ACCESS, 
+                    $this->arNavigation, 
+                    $this->arrFilter, 
+                    $this->pagerParameters
+                )
+            )
+        ) {
+            $resultOfMakingArray = $this->makeArResult($this->arParams);
+            /*
+             * Если было возвращено false, то необходимо остановить обработку компонента.
+             */
+            if ($resultOfMakingArray === false) {
+                return;
+            }
+            /*
+             * Подключение шаблона компонента. 
+             */
+            $this->includeComponentTemplate();
+        }
+
+        /*
+         * Если задан идентификатор типа или инфоблока. 
+         */
+        if (isset($this->arResult['ID'])) {
+            $isAuthorized = $USER->IsAuthorized();
+
+            return $this->processChosenIblockID($isAuthorized, $this->arParams);
+        }
+
+        return $this->arResult;
+    }
+
+    /**
      * Выполнить предварительные настройки перед началом работы с компонентом.
      * @param array $arParams Массив параметров, передаваемых при вызове компонента.
      */
