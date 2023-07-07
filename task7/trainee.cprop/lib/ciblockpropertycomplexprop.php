@@ -20,6 +20,8 @@ class CIBlockPropertyComplexProp
             'DESCRIPTION' => Loc::getMessage('IEX_COMPLEX_PROP_DESC'),
             // HTML для редактирования значений свойства.
             'GetPropertyFieldHtml' => array(__CLASS__,  'GetPropertyFieldHtml'),
+            // Преобразование в формат для сохранения в БД.
+            'ConvertToDB' => array(__CLASS__, 'ConvertToDB'),
         );
     }
 
@@ -90,6 +92,52 @@ class CIBlockPropertyComplexProp
         $result .= '</table>';
 
         return $result;
+    }
+
+    /**
+     * Метод для преобразования значения свойства в формат, 
+     * пригодный для сохранения в базе данных.
+     * @param array $arProperty Метаданные свойства.
+     * @param array $arValue Значение свойства.
+     * @return array Массив с данными в формате ['VALUE' => 'Значение', 'DESCRIPTION' => 'Описание']
+     * для записи в базу данных.
+     */
+    public function ConvertToDB($arProperty, $arValue)
+    {
+        /*
+         * Получить массив со значениями и типами полей свойства.
+         */
+        $arFields = self::prepareSetting($arProperty['USER_TYPE_SETTINGS']);
+        /*
+         * Для полей типа "файл" получить идентификаторы файлов
+         * в таблице файлов системы. 
+         */
+        foreach ($arValue['VALUE'] as $code => $value) {
+            if ($arFields[$code]['TYPE'] === 'file') {
+                $arValue['VALUE'][$code] = self::prepareFileToDB($value);
+            }
+        }
+        /*
+         * Если хотя бы одно поле не пусто, то отметить это в флаге. 
+         */
+        $isEmpty = true;
+        foreach ($arValue['VALUE'] as $v) {
+            if (!empty($v)) {
+                $isEmpty = false;
+                break;
+            }
+        }
+        /*
+         * Если есть непустое поле, то сериализовать значения свойства,
+         * иначе передать массив с пустыми значениями.
+         */
+        if ($isEmpty === false) {
+            $arResult['VALUE'] = json_encode($arValue['VALUE']);
+        } else {
+            $arResult = ['VALUE' => '', 'DESCRIPTION' => ''];
+        }
+
+        return $arResult;
     }
 
     /**
@@ -300,6 +348,36 @@ class CIBlockPropertyComplexProp
                         <span>' . $elUrl . '</span>
                     </td>
                 </tr>';
+
+        return $result;
+    }
+
+    /**
+     * Метод для получения идентификатора файла в таблице файлов системы.
+     * @param array $arValue Значение файлового поля свойства.
+     * @return int $result Числовой идентификатор сохраненного и 
+     * зарегистрированного в системе файла.
+     */
+    private static function prepareFileToDB($arValue)
+    {
+        $result = false;
+        /*
+         * Удалить файл, если требуется. 
+         */
+        if (!empty($arValue['DEL']) && $arValue['DEL'] === 'Y' && !empty($arValue['OLD'])) {
+            CFile::Delete($arValue['OLD']);
+        /*
+         * Если удалять не нужно, то вернуть файл под ключом OLD.
+         */
+        } else if (!empty($arValue['OLD'])) {
+            $result = $arValue['OLD'];
+        /*
+         * Если нет файла, но задано его имя, то сохранить и 
+         * зарегистрировать его в таблице файлов.
+         */
+        } else if (!empty($arValue['name'])) {
+            $result = CFile::SaveFile($arValue, 'vote');
+        }
 
         return $result;
     }
