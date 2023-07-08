@@ -22,6 +22,11 @@ class CIBlockPropertyComplexProp
             'GetPropertyFieldHtml' => array(__CLASS__,  'GetPropertyFieldHtml'),
             // Преобразование в формат для сохранения в БД.
             'ConvertToDB' => array(__CLASS__, 'ConvertToDB'),
+            // Конвертация из формата БД в формат для обработки.
+            'ConvertFromDB' => array(__CLASS__,  'ConvertFromDB'),
+            // HTML настроек свойства в форме редактирования инфоблока.
+            'GetSettingsHTML' => array(__CLASS__, 'GetSettingsHTML'),
+
         );
     }
 
@@ -138,6 +143,141 @@ class CIBlockPropertyComplexProp
         }
 
         return $arResult;
+    }
+
+    /**
+     * Метод для преобразования значений свойства из формата,
+     * пригодного для сохранения в БД, в формат для обработки.
+     * @param array $arProperty Метаданные свойства.
+     * @param array $arValue Значение свойства.
+     * @return array Значения свойства в формате, пригодном для обработки.
+     */
+    public function ConvertFromDB($arProperty, $arValue)
+    {
+        $return = array();
+
+        /*
+         * Если значение свойства из БД не пусто, то десериализовать. 
+         */
+        if (!empty($arValue['VALUE'])) {
+            $arData = json_decode($arValue['VALUE'], true);
+
+            foreach ($arData as $code => $value){
+                $return['VALUE'][$code] = $value;
+            }
+
+        }
+        return $return;
+    }
+
+    /**
+     * Метод, формирующий безопасный HTML отображения настроек свойства для
+     * формы редактирования инфоблока.
+     * @param array $arProperty Метаданные свойства.
+     * @param array $strHTMLControlName Имя элемента управления для заполнения настроек свойства.
+     * @param array $arPropertyFields Пустой массив.
+     * @return string HTML для встраивания в форму редактирования инфоблока.
+     */
+    public static function GetSettingsHTML($arProperty, $strHTMLControlName, &$arPropertyFields)
+    {
+        /*
+         * Добавить/список полей. 
+         */
+        $btnAdd = Loc::getMessage('IEX_COMPLEX_PROP_SETTING_BTN_ADD');
+        $settingsTitle =  Loc::getMessage('IEX_COMPLEX_PROP_SETTINGS_TITLE');
+        /*
+         * Дополнительные флаги управления формой. 
+         */
+        $arPropertyFields = array(
+            /*
+             * "Список полей". 
+             */
+            'USER_TYPE_SETTINGS_TITLE' => $settingsTitle,
+            /*
+             * Массив названий полей свойства которые будут скрыты для редактирования.
+             */
+            'HIDE' => array(
+                'ROW_COUNT', 
+                'COL_COUNT', 
+                'DEFAULT_VALUE', 
+                'SEARCHABLE', 
+                'SMART_FILTER', 
+                'WITH_DESCRIPTION', 
+                'FILTRABLE', 
+                'MULTIPLE_CNT', 
+                'IS_REQUIRED'
+            ),
+            /*
+             * Массив полей для принудительного выставления значений в случае, 
+             * если они не отображаются в форме.
+             */
+            'SET' => array(
+                'MULTIPLE_CNT' => 1,
+                'SMART_FILTER' => 'N',
+                'FILTRABLE' => 'N',
+            ),
+        );
+        /*
+         * Подключить стили и скрипты для формирования формы настроек. 
+         */
+        self::showJsForSetting($strHTMLControlName["NAME"]);
+        self::showCssForSetting();
+        /*
+         * Формирование заголовка таблицы-формы настроек полей свойства.
+         */
+        $result = '<tr><td colspan="2" align="center">
+            <table id="many-fields-table" class="many-fields-table internal">        
+                <tr valign="top" class="heading mf-setting-title">
+                   <td>XML_ID</td>
+                   <td>' . Loc::getMessage('IEX_COMPLEX_PROP_SETTING_FIELD_TITLE') . '</td>
+                   <td>' . Loc::getMessage('IEX_COMPLEX_PROP_SETTING_FIELD_SORT') . '</td>
+                   <td>' . Loc::getMessage('IEX_COMPLEX_PROP_SETTING_FIELD_TYPE') . '</td>
+                </tr>';
+        /*
+         * Получить массив полей свойства с их параметрами.
+         */
+        $arSetting = self::prepareSetting($arProperty['USER_TYPE_SETTINGS']);
+        /*
+         * Вывести значения и параметры уже заданных полей свойства.
+         */
+        if (!empty($arSetting)) {
+            foreach ($arSetting as $code => $arItem) {
+                $result .= '
+                       <tr valign="top">
+                           <td><input type="text" class="inp-code" size="20" value="' . $code . '"></td>
+                           <td><input type="text" class="inp-title" size="35" name="' . $strHTMLControlName["NAME"] . '[' . $code . '_TITLE]" value="' . $arItem['TITLE'] . '"></td>
+                           <td><input type="text" class="inp-sort" size="5" name="' . $strHTMLControlName["NAME"] . '[' . $code . '_SORT]" value="' . $arItem['SORT'] . '"></td>
+                           <td>
+                                <select class="inp-type" name="' . $strHTMLControlName["NAME"] . '[' . $code . '_TYPE]">
+                                    ' . self::getOptionList($arItem['TYPE']) . '
+                                </select>                        
+                           </td>
+                       </tr>';
+            }
+        }
+        /*
+         * Вывести дополнительное пустое поле для возможности его добавления,
+         * а также кнопку "Добавить".
+         */
+        $result .= '
+               <tr valign="top">
+                    <td><input type="text" class="inp-code" size="20"></td>
+                    <td><input type="text" class="inp-title" size="35"></td>
+                    <td><input type="text" class="inp-sort" size="5" value="500"></td>
+                    <td>
+                        <select class="inp-type"> ' . self::getOptionList() . '</select>                        
+                    </td>
+               </tr>
+             </table>   
+                
+                <tr>
+                    <td colspan="2" style="text-align: center;">
+                        <input type="button" value="' . $btnAdd . '" onclick="addNewRows()">
+                    </td>
+                </tr>
+                </td></tr>';
+
+        return $result;
     }
 
     /**
@@ -473,6 +613,110 @@ class CIBlockPropertyComplexProp
                     $(this).closest('tr').hide('slow');
                 });
             </script>
+            <?
+        }
+    }
+
+    /**
+     * Применить скрипты к настрокам свойства в форме редактирования инфоблока.
+     * @param string HTML имени для настроек.
+     */
+    private static function showJsForSetting($inputName)
+    {
+        CJSCore::Init(array("jquery"));
+        ?>
+        <script>
+            /*
+             * Сформировать строку формы с инпутами для ввода кода, имени, 
+             * сортировки и типа поля свойства.
+             */
+            function addNewRows() {
+                $("#many-fields-table").append('' +
+                    '<tr valign="top">' +
+                    '<td><input type="text" class="inp-code" size="20"></td>' +
+                    '<td><input type="text" class="inp-title" size="35"></td>' +
+                    '<td><input type="text" class="inp-sort" size="5" value="500"></td>' +
+                    '<td><select class="inp-type"><?=self::getOptionList()?></select></td>' +
+                    '</tr>');
+            }
+            /*
+             * При изменении символьного кода соответствующе изменять имена полей для названия, сортировки и типа.
+             */
+            $(document).on('change', '.inp-code', function(){
+                var code = $(this).val();
+
+                if (code.length <= 0){
+                    $(this).closest('tr').find('input.inp-title').removeAttr('name');
+                    $(this).closest('tr').find('input.inp-sort').removeAttr('name');
+                    $(this).closest('tr').find('select.inp-type').removeAttr('name');
+                } else {
+                    $(this).closest('tr').find('input.inp-title').attr('name', '<?=$inputName?>[' + code + '_TITLE]');
+                    $(this).closest('tr').find('input.inp-sort').attr('name', '<?=$inputName?>[' + code + '_SORT]');
+                    $(this).closest('tr').find('select.inp-type').attr('name', '<?=$inputName?>[' + code + '_TYPE]');
+                }
+            });
+            /*
+             * Не допускать ввод нечисловых значений в поле сортировки. 
+             */
+            $(document).on('input', '.inp-sort', function(){
+                var num = $(this).val();
+                $(this).val(num.replace(/[^0-9]/gim,''));
+            });
+        </script>
+        <?
+    }
+
+    /**
+     * Получить HTML списка типов полей свойства.
+     * @param string $selected Уже выбранный пользователем в форме тип
+     * (string, file, text, date, element).
+     * @return string HTML списка типов полей комплексного свойства.
+     */
+    private static function getOptionList($selected = 'string')
+    {
+        $result = '';
+        /*
+         * Отображаемые названия типов полей свойства. 
+         */
+        $arOption = [
+            'string' => Loc::getMessage('IEX_COMPLEX_PROP_FIELD_TYPE_STRING'),
+            'file' => Loc::getMessage('IEX_COMPLEX_PROP_FIELD_TYPE_FILE'),
+            'text' => Loc::getMessage('IEX_COMPLEX_PROP_FIELD_TYPE_TEXT'),
+            'date' => Loc::getMessage('IEX_COMPLEX_PROP_FIELD_TYPE_DATE'),
+            'element' => Loc::getMessage('IEX_COMPLEX_PROP_FIELD_TYPE_ELEMENT')
+        ];
+        /*
+         * В зависимости от параметра определить, какой тип уже выбран. 
+         */
+        foreach ($arOption as $code => $name) {
+            $s = '';
+            if ($code === $selected) {
+                $s = 'selected';
+            }
+
+            $result .= '<option value="' . $code . '" ' . $s . '>' . $name . '</option>';
+        }
+
+        return $result;
+    }
+
+    /**
+     * Применить CSS, используемые при настройках свойства в форме
+     * редактирования инфоблока.
+     */
+    private static function showCssForSetting()
+    {
+        if (!self::$showedCss) {
+            self::$showedCss = true;
+            ?>
+            <style>
+                .many-fields-table {margin: 0 auto; /*display: inline;*/}
+                .mf-setting-title td {text-align: center!important; border-bottom: unset!important;}
+                .many-fields-table td {text-align: center;}
+                .many-fields-table > input, .many-fields-table > select{width: 90%!important;}
+                .inp-sort{text-align: center;}
+                .inp-type{min-width: 125px;}
+            </style>
             <?
         }
     }
