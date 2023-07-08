@@ -26,7 +26,12 @@ class CIBlockPropertyComplexProp
             'ConvertFromDB' => array(__CLASS__,  'ConvertFromDB'),
             // HTML настроек свойства в форме редактирования инфоблока.
             'GetSettingsHTML' => array(__CLASS__, 'GetSettingsHTML'),
-
+            // Настройки свойства перед сохранением метаданных свойства в БД.
+            'PrepareSettings' => array(__CLASS__, 'PrepareUserSettings'),
+            // Длина значения свойства.
+            'GetLength' => array(__CLASS__, 'GetLength'),
+            // HTML для отображения свойства в публичной части.
+            'GetPublicViewHTML' => array(__CLASS__, 'GetPublicViewHTML')
         );
     }
 
@@ -278,6 +283,66 @@ class CIBlockPropertyComplexProp
                 </td></tr>';
 
         return $result;
+    }
+
+    /**
+     * Получить массив с настройками свойства для их сохранения в БД.
+     * @param array $arProperty Значения полей метаданных свойства.
+     * @return array Массив с настройками свойства.
+     */
+    public static function PrepareUserSettings($arProperty)
+    {
+        $result = [];
+        if (!empty($arProperty['USER_TYPE_SETTINGS'])) {
+            foreach ($arProperty['USER_TYPE_SETTINGS'] as $code => $value) {
+                $result[$code] = $value;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Получить длину значения свойства.
+     * @param array $arProperty Метаданные свойства.
+     * @param array $arValue Значение свойства.
+     * @return bool Является ли значение свойства заполненным.
+     */
+    public static function GetLength($arProperty, $arValue)
+    {
+        /*
+         * Получить массив с полями свойства и их значениями.
+         */
+        $arFields = self::prepareSetting(unserialize($arProperty['USER_TYPE_SETTINGS']));
+        /*
+         * Если хотя бы одно поле заполнено, то вернуть true. 
+         */
+        $result = false;
+        foreach ($arValue['VALUE'] as $code => $value) {
+            if ($arFields[$code]['TYPE'] === 'file') {
+                if (!empty($value['name']) || (!empty($value['OLD']) && empty($value['DEL']))) {
+                    $result = true;
+                    break;
+                }
+            } else {
+                if (!empty($value)) {
+                    $result = true;
+                    break;
+                }
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Сформировать HTML для отображения свойства в публичной части сайта.
+     * @param array $arProperty Метаданные свойства.
+     * @param array $value Значение свойства.
+     * @param array $strHTMLControlName Пустой массив.
+     * @return string HTML для отображения свойства в публичной части.
+     */
+    public static function GetPublicViewHTML($arProperty, $value, $strHTMLControlName)
+    {
+        return $value;
     }
 
     /**
