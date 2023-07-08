@@ -84,17 +84,13 @@ class CIBlockPropertyComplexProp
         foreach ($arFields as $code => $arItem) {
             if ($arItem['TYPE'] === 'string') {
                 $result .= self::showString($code, $arItem['TITLE'], $value, $strHTMLControlName);
-            }
-            else if ($arItem['TYPE'] === 'file') {
+            } else if ($arItem['TYPE'] === 'file') {
                 $result .= self::showFile($code, $arItem['TITLE'], $value, $strHTMLControlName);
-            }
-            else if ($arItem['TYPE'] === 'text') {
+            } else if ($arItem['TYPE'] === 'text') {
                 $result .= self::showTextarea($code, $arItem['TITLE'], $value, $strHTMLControlName);
-            }
-            else if ($arItem['TYPE'] === 'date') {
+            } else if ($arItem['TYPE'] === 'date') {
                 $result .= self::showDate($code, $arItem['TITLE'], $value, $strHTMLControlName);
-            }
-            else if ($arItem['TYPE'] === 'element') {
+            } else if ($arItem['TYPE'] === 'element') {
                 $result .= self::showBindElement($code, $arItem['TITLE'], $value, $strHTMLControlName);
             }
         }
@@ -112,7 +108,7 @@ class CIBlockPropertyComplexProp
      * @return array Массив с данными в формате ['VALUE' => 'Значение', 'DESCRIPTION' => 'Описание']
      * для записи в базу данных.
      */
-    public function ConvertToDB($arProperty, $arValue)
+    public static function ConvertToDB($arProperty, $arValue)
     {
         /*
          * Получить массив со значениями и типами полей свойства.
@@ -157,7 +153,7 @@ class CIBlockPropertyComplexProp
      * @param array $arValue Значение свойства.
      * @return array Значения свойства в формате, пригодном для обработки.
      */
-    public function ConvertFromDB($arProperty, $arValue)
+    public static function ConvertFromDB($arProperty, $arValue)
     {
         $return = array();
 
@@ -342,7 +338,34 @@ class CIBlockPropertyComplexProp
      */
     public static function GetPublicViewHTML($arProperty, $value, $strHTMLControlName)
     {
-        return $value;
+        /*
+         * Подготовить массив с параметрами полей комплексного свойства. 
+         */
+        if (!empty($arProperty['USER_TYPE_SETTINGS'])) {
+            $arFields = self::prepareSetting($arProperty['USER_TYPE_SETTINGS']);
+        } else {
+            return '<span>'.Loc::getMessage('IEX_COMPLEX_PROP_ERROR_INCORRECT_SETTINGS').'</span>';
+        }
+
+        $result = '';
+        /*
+         * Перебрать все поля свойства. 
+         */
+        foreach ($arFields as $code => $arItem) {
+            if ($arItem['TYPE'] === 'string') {
+                $result .= self::showString($code, $arItem['TITLE'], $value, [], 'public');
+            } else if ($arItem['TYPE'] === 'file') {
+                $result .= self::showFile($code, $arItem['TITLE'], $value, [], 'public');
+            } else if ($arItem['TYPE'] === 'text') {
+                $result .= self::showTextArea($code, $arItem['TITLE'], $value, [], 'public');
+            } else if ($arItem['TYPE'] === 'date') {
+                $result .= self::showDate($code, $arItem['TITLE'], $value, [], 'public');
+            } else if ($arItem['TYPE'] === 'element') {
+                $result .= self::showBindElement($code, $arItem['TITLE'], $value, [], 'public');
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -350,10 +373,12 @@ class CIBlockPropertyComplexProp
      * @param string $code Символьный код поля.
      * @param string $title Название поля.
      * @param array $arValue Значения полей свойства.
-     * @param string array $strHTMLControlName Имена элементов управления.
+     * @param array $strHTMLControlName Имена элементов управления.
+     * @param string $type Отображается ли поле для редактирования в админке ('admin')
+     * или в публичной части ('public').
      * @return string HTML текстового поля свойства.
      */
-    private static function showString($code, $title, $arValue, $strHTMLControlName)
+    private static function showString($code, $title, $arValue, $strHTMLControlName, $type = 'admin')
     {
         $result = '';
         /*
@@ -361,10 +386,14 @@ class CIBlockPropertyComplexProp
          * либо установить пустое значение. 
          */
         $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
-        $result .= '<tr>
+        if ($type == 'admin') {
+            $result .= '<tr>
                     <td align="right">'.$title.': </td>
                     <td><input type="text" value="'.$v.'" name="'.$strHTMLControlName['VALUE'].'['.$code.']"/></td>
                 </tr>';
+        } elseif ($type == 'public') {
+            $result .= '<p>' . $title . ':&nbsp' . $v . '</p>';
+        }
 
         return $result;
     }
@@ -374,34 +403,42 @@ class CIBlockPropertyComplexProp
      * @param string $code Символьный код поля.
      * @param string $title Название поля.
      * @param array $arValue Значения полей свойства.
-     * @param string array $strHTMLControlName Имена элементов управления.
+     * @param array $strHTMLControlName Имена элементов управления.
+     * @param string $type Отображается ли поле для редактирования в админке ('admin')
+     * или в публичной части ('public').
      * @return string HTML многострочного текстового поля свойства.
      */
-    public static function showTextarea($code, $title, $arValue, $strHTMLControlName)
+    public static function showTextarea($code, $title, $arValue, $strHTMLControlName, $type = 'admin')
     {
         $result = '';
 
         $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
-        $result .= '<tr>
+        if ($type == 'admin') {
+            $result .= '<tr>
                     <td align="right" valign="top">'.$title.': </td>
                     <td><textarea rows="8" name="'.$strHTMLControlName['VALUE'].'['.$code.']">'.$v.'</textarea></td>
                 </tr>';
+        } elseif ($type == 'public') {
+            $arParts = preg_split("/\r\n|[\r\n]/", $v);
+            $result .= '<p>' . $title . ':</p>';
+            foreach ($arParts as $part) {
+                $result .= '<p>' . $part . '</p>';
+            }
+            $result .= '<p></p>';
+        }
 
         return $result;
     }
 
     /**
-     * Сформировать HTML-код для файлового поля свойства.
-     * @param string $code Символьный код поля.
-     * @param string $title Название поля.
-     * @param array $arValue Значения полей свойства.
-     * @param string array $strHTMLControlName Имена элементов управления.
-     * @return string HTML файлового поля свойства.
+     * Получить файл из значения указанного свойства.
+     * @param string $code Символьный код файлового поля свойства.
+     * @param array $arValue Значение свойства.
+     * @return int|string Идентификатор файла в системе либо пустая строка.
      */
-    private static function showFile($code, $title, $arValue, $strHTMLControlName)
+    private static function getFileIdFromPropValue($code, $arValue)
     {
-        $result = '';
-
+        $fileId;
         if (!empty($arValue['VALUE'][$code]) && !is_array($arValue['VALUE'][$code])) {
             $fileId = $arValue['VALUE'][$code];
         }
@@ -412,8 +449,48 @@ class CIBlockPropertyComplexProp
             $fileId = '';
         }
 
-        if(!empty($fileId))
-        {
+        return $fileId;
+    }
+
+    /**
+     * Получить составляющие пути до файла и его расширение.
+     * @param array $arFile Массив с информацией о файле.
+     * @param string $strFileStorePath Путь до папки загрузок.
+     * @param string $sFilePath Полный путь до файла.
+     * @param string $fileType Тип файла.
+     */
+    private static function getFileInfo($arFile, &$strFileStorePath, &$sFilePath, &$fileType)
+    {
+        /*
+         * Получить путь для загрузки файлов. 
+         */
+        $strFileStorePath = COption::GetOptionString('main', 'upload_dir', 'upload');
+        /*
+         * Получить путь файла-значения поля.
+         */
+        $sFilePath = '/' . $strFileStorePath . '/' . $arFile['SUBDIR'] . '/' . $arFile['FILE_NAME'];
+        /*
+         * Расширение файла. 
+         */
+        $fileType = self::getExtension($sFilePath);
+    }
+
+    /**
+     * Сформировать HTML-код для файлового поля свойства.
+     * @param string $code Символьный код поля.
+     * @param string $title Название поля.
+     * @param array $arValue Значения полей свойства.
+     * @param array $strHTMLControlName Имена элементов управления.
+     * @param string $type Отображается ли поле для редактирования в админке ('admin')
+     * или в публичной части ('public').
+     * @return string HTML файлового поля свойства.
+     */
+    private static function showFile($code, $title, $arValue, $strHTMLControlName, $type = 'admin')
+    {
+        $result = '';
+
+        $fileId = self::getFileIdFromPropValue($code, $arValue);
+        if (!empty($fileId)) {
             /*
              * Получить информацию о файле. 
              */
@@ -421,56 +498,56 @@ class CIBlockPropertyComplexProp
             /*
              * Если информация о файле была успешно получена. 
              */
-            if($arPicture)
-            {
+            if ($arPicture) {
                 /*
-                 * Получить путь для загрузки файлов. 
+                 * Получить информацию о пути до файла и его типе. 
                  */
-                $strImageStorePath = COption::GetOptionString('main', 'upload_dir', 'upload');
-                /*
-                 * Получить путь файла-значения поля.
-                 */
-                $sImagePath = '/' . $strImageStorePath . '/' . $arPicture['SUBDIR'] . '/' . $arPicture['FILE_NAME'];
-                /*
-                 * Расширение файла. 
-                 */
-                $fileType = self::getExtension($sImagePath);
+                self::getFileInfo($arPicture, $strImageStorePath, $sImagePath, $fileType);
                 /*
                  * Выбрать способ отображения в зависимости от того, является файл
                  * изображением или нет. 
                  */
+                $content = '';
                 if (in_array($fileType, ['png', 'jpg', 'jpeg', 'gif'])) {
-                    $content = '<img src="' . $sImagePath . '">';
+                    $content = '<p>' . $title . ':</p>' . '<img src="' . $sImagePath . '">';
                 } else {
-                    $content = '<div class="mf-file-name">' . $arPicture['FILE_NAME'] . '</div>';
+                    if ($type == 'admin') {
+                        $content = '<div class="mf-file-name">' . $arPicture['FILE_NAME'] . '</div>';
+                    } elseif ($type == 'public') {
+                        $content = '<p>' . $title . ':&nbsp' . $arPicture['FILE_NAME'] . '</p>';
+                    }
                 }
                 /*
                  * Итоговый HTML для отображения файла-значения поля. 
                  */
-                $result = '<tr>
-                        <td align="right" valign="top">' . $title . ': </td>
-                        <td>
-                            <table class="mf-img-table">
-                                <tr>
-                                    <td>' . $content . '<br>
-                                        <div>
-                                            <label><input name="' . $strHTMLControlName['VALUE'] . '[' . $code . '][DEL]" value="Y" type="checkbox"> ' . Loc::getMessage("IEX_COMPLEX_PROP_FILE_DELETE") . '</label>
-                                            <input name="' . $strHTMLControlName['VALUE'] . '[' . $code . '][OLD]" value="' . $fileId . '" type="hidden">
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>                      
-                        </td>
+                if ($type == 'admin') {
+                    $result = '<tr>
+                    <td align="right" valign="top">' . $title . ': </td>
+                    <td>
+                        <table class="mf-img-table">
+                            <tr>
+                                <td>' . $content . '<br>
+                                    <div>
+                                        <label><input name="' . $strHTMLControlName['VALUE'] . '[' . $code . '][DEL]" value="Y" type="checkbox"> ' . Loc::getMessage("IEX_COMPLEX_PROP_FILE_DELETE") . '</label>
+                                        <input name="' . $strHTMLControlName['VALUE'] . '[' . $code . '][OLD]" value="' . $fileId . '" type="hidden">
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>                      
+                    </td>
                     </tr>';
+                } elseif ($type == 'public') {
+                    $result = $content;
+                }
             }
         } else {
-            /*
-             * Файл не указан, поэтому значение value пустое. 
-             */
-            $result .= '<tr>
+            if ($type == 'admin') {
+                $result .= '<tr>
                     <td align="right">'.$title.': </td>
                     <td><input type="file" value="" name="'.$strHTMLControlName['VALUE'].'['.$code.']"/></td>
-                </tr>';
+                    </tr>';
+            }
+            
         }
 
         return $result;
@@ -481,30 +558,36 @@ class CIBlockPropertyComplexProp
      * @param string $code Символьный код поля.
      * @param string $title Название поля.
      * @param array $arValue Значения полей свойства.
-     * @param string array $strHTMLControlName Имена элементов управления.
+     * @param array $strHTMLControlName Имена элементов управления.
+     * @param string $type Отображается ли поле для редактирования в админке ('admin')
+     * или в публичной части ('public').
      * @return string HTML поля-даты свойства.
      */
-    public static function showDate($code, $title, $arValue, $strHTMLControlName)
+    public static function showDate($code, $title, $arValue, $strHTMLControlName, $type = 'admin')
     {
         $result = '';
 
         $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
-        $result .= '<tr>
-                        <td align="right" valign="top">'.$title.': </td>
-                        <td>
-                            <table>
-                                <tr>
-                                    <td style="padding: 0;">
-                                        <div class="adm-input-wrap adm-input-wrap-calendar">
-                                            <input class="adm-input adm-input-calendar" type="text" name="' . $strHTMLControlName['VALUE'] . '[' . $code . ']" size="23" value="' . $v . '">
-                                            <span class="adm-calendar-icon"
-                                                  onclick="BX.calendar({node: this, field:\'' . $strHTMLControlName['VALUE'] . '[' . $code . ']\', form: \'\', bTime: true, bHideTime: false});"></span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>';
+        if ($type == 'admin') {
+            $result .= '<tr>
+                            <td align="right" valign="top">'.$title.': </td>
+                                <td>
+                                    <table>
+                                        <tr>
+                                            <td style="padding: 0;">
+                                                <div class="adm-input-wrap adm-input-wrap-calendar">
+                                                    <input class="adm-input adm-input-calendar" type="text" name="' . $strHTMLControlName['VALUE'] . '[' . $code . ']" size="23" value="' . $v . '">
+                                                    <span class="adm-calendar-icon"
+                                                        onclick="BX.calendar({node: this, field:\'' . $strHTMLControlName['VALUE'] . '[' . $code . ']\', form: \'\', bTime: true, bHideTime: false});"></span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                        </tr>';
+        } elseif ($type == 'public') {
+            $result .= '<p>' . $title . ':&nbsp' . $v . '</p>';
+        }
 
         return $result;
     }
@@ -514,10 +597,12 @@ class CIBlockPropertyComplexProp
      * @param string $code Символьный код поля.
      * @param string $title Название поля.
      * @param array $arValue Значения полей свойства.
-     * @param string array $strHTMLControlName Имена элементов управления.
-     * @return string HTML поля-привязки к элементу..
+     * @param array $strHTMLControlName Имена элементов управления.
+     * @param string $type Отображается ли поле для редактирования в админке ('admin')
+     * или в публичной части ('public').
+     * @return string HTML поля-привязки к элементу.
      */
-    public static function showBindElement($code, $title, $arValue, $strHTMLControlName)
+    public static function showBindElement($code, $title, $arValue, $strHTMLControlName, $type = 'admin')
     {
         $result = '';
         /*
@@ -545,14 +630,18 @@ class CIBlockPropertyComplexProp
             }
         }
 
-        $result .= '<tr>
-                    <td align="right">' . $title . ': </td>
-                    <td>
-                        <input name="' . $strHTMLControlName['VALUE'] . '[' . $code . ']" id="' . $strHTMLControlName['VALUE'] . '[' . $code . ']" value="' . $v . '" size="8" type="text" class="mf-inp-bind-elem">
-                        <input type="button" value="..." onClick="jsUtils.OpenWindow(\'/bitrix/admin/iblock_element_search.php?lang=ru&IBLOCK_ID=0&n=' . $strHTMLControlName['VALUE'] . '&k=' . $code . '\', 900, 700);">&nbsp;
-                        <span>' . $elUrl . '</span>
-                    </td>
-                </tr>';
+        if ($type == 'admin') {
+            $result .= '<tr>
+                            <td align="right">' . $title . ': </td>
+                            <td>
+                                <input name="' . $strHTMLControlName['VALUE'] . '[' . $code . ']" id="' . $strHTMLControlName['VALUE'] . '[' . $code . ']" value="' . $v . '" size="8" type="text" class="mf-inp-bind-elem">
+                                <input type="button" value="..." onClick="jsUtils.OpenWindow(\'/bitrix/admin/iblock_element_search.php?lang=ru&IBLOCK_ID=0&n=' . $strHTMLControlName['VALUE'] . '&k=' . $code . '\', 900, 700);">&nbsp;
+                                <span>' . $elUrl . '</span>
+                            </td>
+                        </tr>';
+        } elseif ($type == 'public') {
+            $result .= '<p>' . $title . ':&nbsp' . $elUrl . '</p>';
+        }
 
         return $result;
     }

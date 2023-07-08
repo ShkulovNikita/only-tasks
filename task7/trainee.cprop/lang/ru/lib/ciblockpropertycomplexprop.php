@@ -1,5 +1,5 @@
 <?php
-$MESS['IEX_COMPLEX_PROP_DESC'] = 'Комплексное свойство';
+$MESS['IEX_COMPLEX_PROP_DESC'] = 'Комплексное свойство (задание 7)';
 $MESS['IEX_COMPLEX_PROP_SHOW_TEXT'] = 'Показать';
 $MESS['IEX_COMPLEX_PROP_HIDE_TEXT'] = 'Свернуть';
 $MESS['IEX_COMPLEX_PROP_CLEAR_TEXT'] = 'Удалить';
