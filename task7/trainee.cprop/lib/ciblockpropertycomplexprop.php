@@ -24,8 +24,13 @@ class CIBlockPropertyComplexProp
             'ConvertToDB' => array(__CLASS__, 'ConvertToDB'),
             // Конвертация из формата БД в формат для обработки.
             'ConvertFromDB' => array(__CLASS__,  'ConvertFromDB'),
+            
+            // --------------------- //
+            //       ОБРАБОТАНО
+            // --------------------- //
             // HTML настроек свойства в форме редактирования инфоблока.
             'GetSettingsHTML' => array(__CLASS__, 'GetSettingsHTML'),
+            
             // Настройки свойства перед сохранением метаданных свойства в БД.
             'PrepareSettings' => array(__CLASS__, 'PrepareUserSettings'),
             // Длина значения свойства.
@@ -182,7 +187,7 @@ class CIBlockPropertyComplexProp
     public static function GetSettingsHTML($arProperty, $strHTMLControlName, &$arPropertyFields)
     {
         /*
-         * Добавить/список полей. 
+         * "Добавить", "Список полей". 
          */
         $btnAdd = Loc::getMessage('IEX_COMPLEX_PROP_SETTING_BTN_ADD');
         $settingsTitle =  Loc::getMessage('IEX_COMPLEX_PROP_SETTINGS_TITLE');
@@ -195,7 +200,7 @@ class CIBlockPropertyComplexProp
              */
             'USER_TYPE_SETTINGS_TITLE' => $settingsTitle,
             /*
-             * Массив названий полей свойства которые будут скрыты для редактирования.
+             * Массив названий полей свойства, которые будут скрыты для редактирования.
              */
             'HIDE' => array(
                 'ROW_COUNT', 
@@ -823,7 +828,7 @@ class CIBlockPropertyComplexProp
     /**
      * Получить HTML списка типов полей свойства.
      * @param string $selected Уже выбранный пользователем в форме тип
-     * (string, file, text, date, element).
+     * (string, file, text, date, element, html).
      * @return string HTML списка типов полей комплексного свойства.
      */
     private static function getOptionList($selected = 'string')
@@ -837,7 +842,8 @@ class CIBlockPropertyComplexProp
             'file' => Loc::getMessage('IEX_COMPLEX_PROP_FIELD_TYPE_FILE'),
             'text' => Loc::getMessage('IEX_COMPLEX_PROP_FIELD_TYPE_TEXT'),
             'date' => Loc::getMessage('IEX_COMPLEX_PROP_FIELD_TYPE_DATE'),
-            'element' => Loc::getMessage('IEX_COMPLEX_PROP_FIELD_TYPE_ELEMENT')
+            'element' => Loc::getMessage('IEX_COMPLEX_PROP_FIELD_TYPE_ELEMENT'),
+            'html' => Loc::getMessage('IEX_COMPLEX_PROP_FIELD_TYPE_HTML'),
         ];
         /*
          * В зависимости от параметра определить, какой тип уже выбран. 
