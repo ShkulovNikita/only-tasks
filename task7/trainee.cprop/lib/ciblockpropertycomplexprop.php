@@ -24,13 +24,8 @@ class CIBlockPropertyComplexProp
             'ConvertToDB' => array(__CLASS__, 'ConvertToDB'),
             // Конвертация из формата БД в формат для обработки.
             'ConvertFromDB' => array(__CLASS__,  'ConvertFromDB'),
-            
-            // --------------------- //
-            //       ОБРАБОТАНО
-            // --------------------- //
             // HTML настроек свойства в форме редактирования инфоблока.
             'GetSettingsHTML' => array(__CLASS__, 'GetSettingsHTML'),
-            
             // Настройки свойства перед сохранением метаданных свойства в БД.
             'PrepareSettings' => array(__CLASS__, 'PrepareUserSettings'),
             // Длина значения свойства.
@@ -97,6 +92,8 @@ class CIBlockPropertyComplexProp
                 $result .= self::showDate($code, $arItem['TITLE'], $value, $strHTMLControlName);
             } else if ($arItem['TYPE'] === 'element') {
                 $result .= self::showBindElement($code, $arItem['TITLE'], $value, $strHTMLControlName);
+            } else if ($arItem['TYPE'] === 'html') {
+                $result .= self::showHtmlElement($code, $arItem['TITLE'], $value, $strHTMLControlName);
             }
         }
 
@@ -113,12 +110,15 @@ class CIBlockPropertyComplexProp
      * @return array Массив с данными в формате ['VALUE' => 'Значение', 'DESCRIPTION' => 'Описание']
      * для записи в базу данных.
      */
-    public static function ConvertToDB($arProperty, $arValue)
+    public static function ConvertToDB($arProperty, &$arValue)
     {
         /*
          * Получить массив со значениями и типами полей свойства.
          */
         $arFields = self::prepareSetting($arProperty['USER_TYPE_SETTINGS']);
+        if (!empty($arValue['VALUE'])) {
+            self::addHtmlFields($arFields, $arValue);
+        }
         /*
          * Для полей типа "файл" получить идентификаторы файлов
          * в таблице файлов системы. 
@@ -149,6 +149,36 @@ class CIBlockPropertyComplexProp
         }
 
         return $arResult;
+    }
+
+    /**
+     * Добавить в массив значений полей свойства значения,
+     * введенные в визуальном редакторе.
+     * @param array $arFields Массив со всеми полями свойства и их параметрами.
+     * @param array $arValue Массив со значениями полей свойства.
+     */
+    private static function addHtmlFields($arFields, &$arValue)
+    {
+        /*
+         * Перебрать все поля свойства.
+         */
+        foreach ($arFields as $arFieldCode => $arFieldValue) {
+            /*
+             * Поля типа 'html' следует внести в массив значений полей. 
+             */
+            if ($arFieldValue['TYPE'] == 'html') {
+                /*
+                 * Значение поля из визуального редактора. 
+                 */
+                $valueFromPost = $_POST[$arFieldCode];
+                if (!empty($valueFromPost)) {
+                    /*
+                     * Внести значение, если есть. 
+                     */
+                    $arValue['VALUE'][$arFieldCode] = $valueFromPost;
+                }
+            }
+        }
     }
 
     /**
@@ -367,6 +397,8 @@ class CIBlockPropertyComplexProp
                 $result .= self::showDate($code, $arItem['TITLE'], $value, [], 'public');
             } else if ($arItem['TYPE'] === 'element') {
                 $result .= self::showBindElement($code, $arItem['TITLE'], $value, [], 'public');
+            } else if ($arItem['TYPE'] === 'html') {
+                $result .= self::showHtmlElement($code, $arItem['TITLE'], $value, [], 'public');
             }
         }
 
@@ -387,7 +419,7 @@ class CIBlockPropertyComplexProp
     {
         $result = '';
         /*
-         * Получить значение свойства для данного поля по его символьному коду,
+         * Получить значение свойства для данного поля по его символьному коду
          * либо установить пустое значение. 
          */
         $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
@@ -396,6 +428,74 @@ class CIBlockPropertyComplexProp
                     <td align="right">'.$title.': </td>
                     <td><input type="text" value="'.$v.'" name="'.$strHTMLControlName['VALUE'].'['.$code.']"/></td>
                 </tr>';
+        } elseif ($type == 'public') {
+            $result .= '<p>' . $title . ':&nbsp' . $v . '</p>';
+        }
+
+        return $result;
+    }
+
+    /**
+     * Сформировать HTML-код для поля-визуального редактора.
+     * @param string $code Символьный код поля.
+     * @param string $title Название поля.
+     * @param array $arValue Значения полей свойства.
+     * @param array $strHTMLControlName Имена элементов управления.
+     * @param string $type Отображается ли поле для редактирования в админке ('admin')
+     * или в публичной части ('public').
+     * @return string HTML поля-визуального редактора.
+     */
+    private static function showHtmlElement($code, $title, $arValue, $strHTMLControlName, $type = 'admin')
+    {
+        $result = '';
+        /*
+         * Получить значение свойства для данного поля
+         * либо установить пустое значение. 
+         */
+        $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
+        if ($type == 'admin') {
+            $htmlEditorHeight = 80;
+            /*
+             * Начать буферизацию, чтобы получить HTML-код редактора. 
+             */
+            ob_start();
+            /*
+             * Вывести визуальный редактор. 
+             */
+            CFileMan::AddHTMLEditorFrame(
+                /*
+                 * Имя текущего пользовательского поля. 
+                 */
+                $code,
+                /*
+                 * Уже введенное значение, если есть. 
+                 */
+                $v,
+                /*
+                 * Имя типа поля имя_TYPE.
+                 */
+                $code . "_TYPE",
+                /*
+                 * Тип введенного текста (?): html либо обычный текст. 
+                 */
+                "html",
+                /*
+                 * Высота поля ввода. 
+                 */
+                array(
+                    'height' => $htmlEditorHeight,
+                )
+            );
+            /*
+             * Получить значение из буфера и закрыть буфер. 
+             */
+            $tempResult .= ob_get_contents();
+            ob_end_clean();
+
+            $result .= '<tr>' . 
+                            '<td align="right">' . $title . ': </td>' .
+                            '<td>' . $tempResult . '</td>' .
+                        '</tr>';
         } elseif ($type == 'public') {
             $result .= '<p>' . $title . ':&nbsp' . $v . '</p>';
         }
