@@ -84,37 +84,33 @@ class trainee_cprop extends CModule
         return true;
     }
 
-    function getEvents()
-    {
-        return [
-            [
-                'FROM_MODULE' => 'iblock', 
-                'EVENT' => 'OnIBlockPropertyBuildList', 
-                'TO_METHOD' => 'GetUserTypeDescription'
-            ],
-        ];
-    }
-
     /**
      * Зарегистрировать обработчик события из модуля для события
      * построения списка пользовательских свойств инфоблока.
      */
     function InstallEvents()
     {
-        $classHandler = 'CIBlockPropertyComplexProp';
         $eventManager = EventManager::getInstance();
-
-        $arEvents = $this->getEvents();
-
-        foreach ($arEvents as $arEvent){
-            $eventManager->registerEventHandler(
-                $arEvent['FROM_MODULE'],
-                $arEvent['EVENT'],
-                $this->MODULE_ID,
-                $classHandler,
-                $arEvent['TO_METHOD']
-            );
-        }
+        /*
+         * Добавить комплексное свойство. 
+         */
+        $eventManager->registerEventHandler(
+            'iblock', 
+            'OnIBlockPropertyBuildList', 
+            $this->MODULE_ID,
+            'CIBlockPropertyComplexProp',
+            'GetUserTypeDescription'
+        );
+        /*
+         * Добавить пользовательское поле. 
+         */
+        $eventManager->registerEventHandler(
+            'main',
+            'OnUserTypeBuildList',
+            $this->MODULE_ID,
+            'CComplexUserField',
+            'GetUserTypeDescription'
+        );
 
         return true;
     }
@@ -124,19 +120,21 @@ class trainee_cprop extends CModule
      */
     function UnInstallEvents()
     {
-        $classHandler = 'CIBlockPropertyComplexProp';
         $eventManager = EventManager::getInstance();
-
-        $arEvents = $this->getEvents();
-        foreach($arEvents as $arEvent){
-            $eventManager->unregisterEventHandler(
-                $arEvent['FROM_MODULE'],
-                $arEvent['EVENT'],
-                $this->MODULE_ID,
-                $classHandler,
-                $arEvent['TO_METHOD']
-            );
-        }
+        $eventManager->unregisterEventHandler(
+            'iblock', 
+            'OnIBlockPropertyBuildList', 
+            $this->MODULE_ID,
+            'CIBlockPropertyComplexProp',
+            'GetUserTypeDescription'
+        );
+        $eventManager->unregisterEventHandler(
+            'main',
+            'OnUserTypeBuildList',
+            $this->MODULE_ID,
+            'CComplexUserField',
+            'GetUserTypeDescription'
+        );
 
         return true;
     }

@@ -22,7 +22,7 @@ class CCustomTypeHtml extends \Bitrix\Main\UserField\Types\StringType
 			"DESCRIPTION" => GetMessage("PPROP_NAME"),
 			"BASE_TYPE" => "string",
 		);
-	}
+	} 
 	
     /**
      * Получить HTML для работы с пользовательским полем.
@@ -55,7 +55,7 @@ class CCustomTypeHtml extends \Bitrix\Main\UserField\Types\StringType
          * Если поле множественное, то заменить спецсимволы в имени поля
          * на символ подчеркивания.
          */
-		if($arUserField['MULTIPLE'] == 'Y') {
+		if ($arUserField['MULTIPLE'] == 'Y') {
             $name = preg_replace("/[\[\]]/i", "_", $arHtmlControl["NAME"]);
         } else {
             $name = $arHtmlControl["NAME"];
