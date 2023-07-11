@@ -15,3 +15,4 @@ $MESS['COMPLEX_USER_FIELD_FORM_HIDE_TEXT'] = 'Свернуть';
 $MESS['COMPLEX_USER_FIELD_FORM_CLEAR_TEXT'] = 'Удалить';
 $MESS['COMPLEX_USER_FIELD_FORM_SHOW_TEXT'] = 'Показать';
 $MESS['COMPLEX_USER_FIELD_FORM_ERROR'] = 'Не заданы настройки пользовательского поля.';
+$MESS['COMPLEX_USER_FIELD_FORM_DELETE_FILE_TEXT'] = 'Удалить файл';

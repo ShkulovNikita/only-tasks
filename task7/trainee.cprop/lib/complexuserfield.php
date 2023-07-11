@@ -86,6 +86,16 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
         foreach ($arFields as $code => $arItem) {
             if ($arItem['TYPE'] === 'string') {
                 $result .= self::showString($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
+            } else if ($arItem['TYPE'] === 'file') {
+                $result .= self::showFile($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
+            } else if ($arItem['TYPE'] === 'text') {
+                $result .= self::showTextarea($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
+            } else if ($arItem['TYPE'] === 'date') {
+                $result .= self::showDate($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
+            } else if ($arItem['TYPE'] === 'element') {
+                $result .= self::showBindElement($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
+            } else if ($arItem['TYPE'] === 'html') {
+                $result .= self::showHtmlElement($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
             }
         }
 
@@ -135,6 +145,269 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
                 <td align="right">'.$title.': </td>
                 <td><input type="text" value="'.$v.'" name="'.$arHtmlControl['NAME'] . '['.$code.']"/></td>
             </tr>';
+
+        return $result;
+    }
+
+    /**
+     * Сформировать HTML-код для поля-визуального редактора.
+     * @param string $code Символьный код поля.
+     * @param string $title Название поля.
+     * @param array $arValue Значения полей свойства.
+     * @param array $strHTMLControlName Имена элементов управления.
+     * @return string HTML поля-визуального редактора.
+     */
+    private static function showHtmlElement($code, $title, $arValue, $strHTMLControlName)
+    {
+        $result = '';
+        /*
+         * Получить значение свойства для данного поля
+         * либо установить пустое значение. 
+         */
+        $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
+        $htmlEditorHeight = 80;
+        /*
+         * Начать буферизацию, чтобы получить HTML-код редактора. 
+         */
+        ob_start();
+        /*
+         * Вывести визуальный редактор. 
+         */
+        CFileMan::AddHTMLEditorFrame(
+            $code,
+            $v,
+            $code . "_TYPE",
+            "html",
+            array(
+                'height' => $htmlEditorHeight,
+            )
+        );
+        /*
+         * Получить значение из буфера и закрыть буфер. 
+         */
+        $tempResult .= ob_get_contents();
+        ob_end_clean();
+
+        $result .= '<tr>' . 
+                        '<td align="right">' . $title . ': </td>' .
+                        '<td>' . $tempResult . '</td>' .
+                    '</tr>';
+
+        return $result;
+    }
+
+    /**
+     * Сформировать HTML-код для многострочного текстового поля свойства.
+     * @param string $code Символьный код поля.
+     * @param string $title Название поля.
+     * @param array $arValue Значения полей свойства.
+     * @param array $strHTMLControlName Имена элементов управления.
+     * @return string HTML многострочного текстового поля свойства.
+     */
+    public static function showTextarea($code, $title, $arValue, $strHTMLControlName)
+    {
+        $result = '';
+
+        $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
+        $result .= '<tr>
+                <td align="right" valign="top">'.$title.': </td>
+                <td><textarea rows="8" name="'.$strHTMLControlName['NAME'].'['.$code.']">'.$v.'</textarea></td>
+            </tr>';
+
+        return $result;
+    }
+
+        /**
+     * Получить файл из значения указанного свойства.
+     * @param string $code Символьный код файлового поля свойства.
+     * @param array $arValue Значение свойства.
+     * @return int|string Идентификатор файла в системе либо пустая строка.
+     */
+    private static function getFileIdFromPropValue($code, $arValue)
+    {
+        $fileId;
+        if (!empty($arValue['VALUE'][$code]) && !is_array($arValue['VALUE'][$code])) {
+            $fileId = $arValue['VALUE'][$code];
+        }
+        else if (!empty($arValue['VALUE'][$code]['OLD'])) {
+            $fileId = $arValue['VALUE'][$code]['OLD'];
+        }
+        else {
+            $fileId = '';
+        }
+
+        return $fileId;
+    }
+
+    /**
+     * Получить составляющие пути до файла и его расширение.
+     * @param array $arFile Массив с информацией о файле.
+     * @param string $strFileStorePath Путь до папки загрузок.
+     * @param string $sFilePath Полный путь до файла.
+     * @param string $fileType Тип файла.
+     */
+    private static function getFileInfo($arFile, &$strFileStorePath, &$sFilePath, &$fileType)
+    {
+        /*
+         * Получить путь для загрузки файлов. 
+         */
+        $strFileStorePath = COption::GetOptionString('main', 'upload_dir', 'upload');
+        /*
+         * Получить путь файла-значения поля.
+         */
+        $sFilePath = '/' . $strFileStorePath . '/' . $arFile['SUBDIR'] . '/' . $arFile['FILE_NAME'];
+        /*
+         * Расширение файла. 
+         */
+        $fileType = self::getExtension($sFilePath);
+    }
+
+    /**
+     * Сформировать HTML-код для файлового поля свойства.
+     * @param string $code Символьный код поля.
+     * @param string $title Название поля.
+     * @param array $arValue Значения полей свойства.
+     * @param array $strHTMLControlName Имена элементов управления.
+     * @return string HTML файлового поля свойства.
+     */
+    private static function showFile($code, $title, $arValue, $strHTMLControlName)
+    {
+        $result = '';
+
+        $fileId = self::getFileIdFromPropValue($code, $arValue);
+        if (!empty($fileId)) {
+            /*
+             * Получить информацию о файле. 
+             */
+            $arPicture = CFile::GetByID($fileId)->Fetch();
+            /*
+             * Если информация о файле была успешно получена. 
+             */
+            if ($arPicture) {
+                /*
+                 * Получить информацию о пути до файла и его типе. 
+                 */
+                self::getFileInfo($arPicture, $strImageStorePath, $sImagePath, $fileType);
+                /*
+                 * Выбрать способ отображения в зависимости от того, является файл
+                 * изображением или нет. 
+                 */
+                $content = '';
+                if (in_array($fileType, ['png', 'jpg', 'jpeg', 'gif'])) {
+                    $content = '<p>' . $title . ':</p>' . '<img src="' . $sImagePath . '">';
+                } else {
+                    if ($type == 'admin') {
+                        $content = '<div class="mf-file-name">' . $arPicture['FILE_NAME'] . '</div>';
+                    } elseif ($type == 'public') {
+                        $content = '<p>' . $title . ':&nbsp' . $arPicture['FILE_NAME'] . '</p>';
+                    }
+                }
+                /*
+                 * Итоговый HTML для отображения файла-значения поля. 
+                 */
+                $result = '<tr>
+                <td align="right" valign="top">' . $title . ': </td>
+                <td>
+                    <table class="mf-img-table">
+                        <tr>
+                            <td>' . $content . '<br>
+                                <div>
+                                    <label><input name="' . $strHTMLControlName['NAME'] . '[' . $code . '][DEL]" value="Y" type="checkbox"> ' . Loc::getMessage("COMPLEX_USER_FIELD_FORM_DELETE_FILE_TEXT") . '</label>
+                                    <input name="' . $strHTMLControlName['NAME'] . '[' . $code . '][OLD]" value="' . $fileId . '" type="hidden">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>                      
+                </td>
+                </tr>';
+            }
+        } else {
+            $result .= '<tr>
+                <td align="right">'.$title.': </td>
+                <td><input type="file" value="" name="'.$strHTMLControlName['NAME'].'['.$code.']"/></td>
+                </tr>';
+        }
+
+        return $result;
+    }
+
+    /**
+     * Сформировать HTML-код для поля-даты свойства.
+     * @param string $code Символьный код поля.
+     * @param string $title Название поля.
+     * @param array $arValue Значения полей свойства.
+     * @param array $strHTMLControlName Имена элементов управления.
+     * @return string HTML поля-даты свойства.
+     */
+    public static function showDate($code, $title, $arValue, $strHTMLControlName)
+    {
+        $result = '';
+
+        $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
+        $result .= '<tr>
+                        <td align="right" valign="top">'.$title.': </td>
+                            <td>
+                                <table>
+                                    <tr>
+                                        <td style="padding: 0;">
+                                            <div class="adm-input-wrap adm-input-wrap-calendar">
+                                                <input class="adm-input adm-input-calendar" type="text" name="' . $strHTMLControlName['NAME'] . '[' . $code . ']" size="23" value="' . $v . '">
+                                                <span class="adm-calendar-icon"
+                                                    onclick="BX.calendar({node: this, field:\'' . $strHTMLControlName['NAME'] . '[' . $code . ']\', form: \'\', bTime: true, bHideTime: false});"></span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                    </tr>';
+
+        return $result;
+    }
+
+    /**
+     * Сформировать HTML-код для поля-привязки к элементу.
+     * @param string $code Символьный код поля.
+     * @param string $title Название поля.
+     * @param array $arValue Значения полей свойства.
+     * @param array $strHTMLControlName Имена элементов управления.
+     * @return string HTML поля-привязки к элементу.
+     */
+    public static function showBindElement($code, $title, $arValue, $strHTMLControlName)
+    {
+        $result = '';
+        /*
+         * Идентификатор элемента. 
+         */
+        $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
+
+        $elUrl = '';
+        if (!empty($v)) {
+            /*
+             * Получить инфоблок, к которому была выполнена привязка. 
+             */
+            $arElem = \CIBlockElement::GetList(
+                [], 
+                ['ID' => $v],
+                false, 
+                ['nPageSize' => 1], 
+                ['ID', 'IBLOCK_ID', 'IBLOCK_TYPE_ID', 'NAME']
+            )->Fetch();
+            /*
+             * Если элемент был получен, то сформировать ссылку на него. 
+             */
+            if (!empty($arElem)) {
+                $elUrl .= '<a target="_blank" href="/bitrix/admin/iblock_element_edit.php?IBLOCK_ID=' . $arElem['IBLOCK_ID'] . '&ID=' . $arElem['ID'] . '&type=' . $arElem['IBLOCK_TYPE_ID'] . '">' . $arElem['NAME'] . '</a>';
+            }
+        }
+
+        $result .= '<tr>
+                        <td align="right">' . $title . ': </td>
+                        <td>
+                            <input name="' . $strHTMLControlName['NAME'] . '[' . $code . ']" id="' . $strHTMLControlName['NAME'] . '[' . $code . ']" value="' . $v . '" size="8" type="text" class="mf-inp-bind-elem">
+                            <input type="button" value="..." onClick="jsUtils.OpenWindow(\'/bitrix/admin/iblock_element_search.php?lang=ru&IBLOCK_ID=0&n=' . $strHTMLControlName['NAME'] . '&k=' . $code . '\', 900, 700);">&nbsp;
+                            <span>' . $elUrl . '</span>
+                        </td>
+                    </tr>';
 
         return $result;
     }
@@ -262,9 +535,77 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
             $value = $_POST[$arUserField['FIELD_NAME']];
         }*/
 
+        $arFields = self::prepareSetting($arUserField['SETTINGS']);
+        if (!empty($value)) {
+            self::addHtmlFields($arFields, $value);
+        }
+        /*
+         * Для полей типа "файл" получить идентификаторы файлов
+         * в таблице файлов системы. 
+         */
+        foreach ($value as $code => $v) {
+            if ($arFields[$code]['TYPE'] === 'file') {
+                $value[$code] = self::prepareFileToDB($v);
+            }
+        }
+        /*
+         * Если хотя бы одно поле не пусто, то отметить это в флаге. 
+         */
+        $isEmpty = true;
+        foreach ($value as $v) {
+            if (!empty($v)) {
+                $isEmpty = false;
+                break;
+            }
+        }
+        /*
+         * Если есть непустое поле, то сериализовать значения свойства,
+         * иначе передать массив с пустыми значениями.
+         */
+        return \Bitrix\Main\Web\Json::encode($value);
+
+        if ($isEmpty === false) {
+            $arResult['VALUE'] = json_encode($value);
+        } else {
+            $arResult = ['VALUE' => '', 'DESCRIPTION' => ''];
+        }
+
+        return $arResult;
+
+
         $value = \Bitrix\Main\Web\Json::encode($value);
 
         return $value;
+    }
+
+    /**
+     * Добавить в массив значений полей свойства значения,
+     * введенные в визуальном редакторе.
+     * @param array $arFields Массив со всеми полями свойства и их параметрами.
+     * @param array $arValue Массив со значениями полей свойства.
+     */
+    private static function addHtmlFields($arFields, &$arValue)
+    {
+        /*
+         * Перебрать все поля свойства.
+         */
+        foreach ($arFields as $arFieldCode => $arFieldValue) {
+            /*
+             * Поля типа 'html' следует внести в массив значений полей. 
+             */
+            if ($arFieldValue['TYPE'] == 'html') {
+                /*
+                 * Значение поля из визуального редактора. 
+                 */
+                $valueFromPost = $_POST[$arFieldCode];
+                if (!empty($valueFromPost)) {
+                    /*
+                     * Внести значение, если есть. 
+                     */
+                    $arValue['VALUE'][$arFieldCode] = $valueFromPost;
+                }
+            }
+        }
     }
 
     /**
@@ -276,6 +617,36 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
     {
         $aMsg = array();
         return $aMsg;
+    }
+
+    /**
+     * Метод для получения идентификатора файла в таблице файлов системы.
+     * @param array $arValue Значение файлового поля свойства.
+     * @return int $result Числовой идентификатор сохраненного и 
+     * зарегистрированного в системе файла.
+     */
+    private static function prepareFileToDB($arValue)
+    {
+        $result = false;
+        /*
+         * Удалить файл, если требуется. 
+         */
+        if (!empty($arValue['DEL']) && $arValue['DEL'] === 'Y' && !empty($arValue['OLD'])) {
+            CFile::Delete($arValue['OLD']);
+        /*
+         * Если удалять не нужно, то вернуть файл под ключом OLD.
+         */
+        } else if (!empty($arValue['OLD'])) {
+            $result = $arValue['OLD'];
+        /*
+         * Если нет файла, но задано его имя, то сохранить и 
+         * зарегистрировать его в таблице файлов.
+         */
+        } else if (!empty($arValue['name'])) {
+            $result = CFile::SaveFile($arValue, 'vote');
+        }
+
+        return $result;
     }
 
     /**
@@ -517,7 +888,17 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
         if (!empty($arValue["VALUE"])) {
             $arValue = \Bitrix\Main\Web\Json::decode(html_entity_decode($arValue["VALUE"]));
         }
-        
+
         return $arValue;
+    }
+
+    /**
+     * Получить расширение указанного файла.
+     * @param string $filePath Путь до файла.
+     * @return string Расширение файла.
+     */
+    private static function getExtension($filePath)
+    {
+        return array_pop(explode('.', $filePath));
     }
 }
