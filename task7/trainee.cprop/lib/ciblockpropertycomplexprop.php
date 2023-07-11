@@ -168,15 +168,27 @@ class CIBlockPropertyComplexProp
              */
             if ($arFieldValue['TYPE'] == 'html') {
                 /*
-                 * Значение поля из визуального редактора. 
+                 * Перебрать значения из POST, чтобы найти подходящее. 
                  */
+                foreach($_POST as $keyFromPost => $valFromPost) {
+                    if (
+                        preg_match("/\w+__VALUE__" . $arFieldCode . "_$/i",
+                        $keyFromPost, 
+                        $m) 
+                    ) {
+                        $arValue['VALUE'][$arFieldCode] = $valFromPost;
+                        unset($_POST[$keyFromPost]);
+                        break;
+                    }
+                }
+
+                /*
+                 * Значение поля из визуального редактора. 
+                 */ /*
                 $valueFromPost = $_POST[$arFieldCode];
                 if (!empty($valueFromPost)) {
-                    /*
-                     * Внести значение, если есть. 
-                     */
                     $arValue['VALUE'][$arFieldCode] = $valueFromPost;
-                }
+                }*/
             }
         }
     }
@@ -453,6 +465,10 @@ class CIBlockPropertyComplexProp
          * либо установить пустое значение. 
          */
         $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
+        
+        $name = $strHTMLControlName['VALUE'] . '[' . $code . ']';
+        $name = preg_replace("/[\[\]]/i", "_", $name);
+
         if ($type == 'admin') {
             $htmlEditorHeight = 80;
             /*
@@ -466,7 +482,7 @@ class CIBlockPropertyComplexProp
                 /*
                  * Имя текущего пользовательского поля. 
                  */
-                $code,
+                $name,
                 /*
                  * Уже введенное значение, если есть. 
                  */
@@ -474,7 +490,7 @@ class CIBlockPropertyComplexProp
                 /*
                  * Имя типа поля имя_TYPE.
                  */
-                $code . "_TYPE",
+                $name . "_TYPE",
                 /*
                  * Тип введенного текста (?): html либо обычный текст. 
                  */
@@ -486,6 +502,9 @@ class CIBlockPropertyComplexProp
                     'height' => $htmlEditorHeight,
                 )
             );
+
+            echo '<input type="hidden" name="'.$strHTMLControlName["VALUE"] . '[' . $code . ']' .'" >';
+
             /*
              * Получить значение из буфера и закрыть буфер. 
              */
