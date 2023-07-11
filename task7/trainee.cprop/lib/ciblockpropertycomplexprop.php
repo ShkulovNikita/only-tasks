@@ -152,48 +152,6 @@ class CIBlockPropertyComplexProp
     }
 
     /**
-     * Добавить в массив значений полей свойства значения,
-     * введенные в визуальном редакторе.
-     * @param array $arFields Массив со всеми полями свойства и их параметрами.
-     * @param array $arValue Массив со значениями полей свойства.
-     */
-    private static function addHtmlFields($arFields, &$arValue)
-    {
-        /*
-         * Перебрать все поля свойства.
-         */
-        foreach ($arFields as $arFieldCode => $arFieldValue) {
-            /*
-             * Поля типа 'html' следует внести в массив значений полей. 
-             */
-            if ($arFieldValue['TYPE'] == 'html') {
-                /*
-                 * Перебрать значения из POST, чтобы найти подходящее. 
-                 */
-                foreach($_POST as $keyFromPost => $valFromPost) {
-                    if (
-                        preg_match("/\w+__VALUE__" . $arFieldCode . "_$/i",
-                        $keyFromPost, 
-                        $m) 
-                    ) {
-                        $arValue['VALUE'][$arFieldCode] = $valFromPost;
-                        unset($_POST[$keyFromPost]);
-                        break;
-                    }
-                }
-
-                /*
-                 * Значение поля из визуального редактора. 
-                 */ /*
-                $valueFromPost = $_POST[$arFieldCode];
-                if (!empty($valueFromPost)) {
-                    $arValue['VALUE'][$arFieldCode] = $valueFromPost;
-                }*/
-            }
-        }
-    }
-
-    /**
      * Метод для преобразования значений свойства из формата,
      * пригодного для сохранения в БД, в формат для обработки.
      * @param array $arProperty Метаданные свойства.
@@ -213,8 +171,8 @@ class CIBlockPropertyComplexProp
             foreach ($arData as $code => $value){
                 $return['VALUE'][$code] = $value;
             }
-
         }
+        
         return $return;
     }
 
@@ -798,6 +756,40 @@ class CIBlockPropertyComplexProp
         }
 
         return $result;
+    }
+
+    /**
+     * Добавить в массив значений полей свойства значения,
+     * введенные в визуальном редакторе.
+     * @param array $arFields Массив со всеми полями свойства и их параметрами.
+     * @param array $arValue Массив со значениями полей свойства.
+     */
+    private static function addHtmlFields($arFields, &$arValue)
+    {
+        /*
+         * Перебрать все поля свойства.
+         */
+        foreach ($arFields as $arFieldCode => $arFieldValue) {
+            /*
+             * Поля типа 'html' следует внести в массив значений полей. 
+             */
+            if ($arFieldValue['TYPE'] == 'html') {
+                /*
+                 * Перебрать значения из POST, чтобы найти подходящее. 
+                 */
+                foreach($_POST as $keyFromPost => $valFromPost) {
+                    if (
+                        preg_match("/\w+__VALUE__" . $arFieldCode . "_$/i",
+                        $keyFromPost, 
+                        $m) 
+                    ) {
+                        $arValue['VALUE'][$arFieldCode] = $valFromPost;
+                        unset($_POST[$keyFromPost]);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     /**
