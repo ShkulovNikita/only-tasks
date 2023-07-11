@@ -45,12 +45,51 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
      */
     public static function getEditRowHtml($arUserField, $arHtmlControl)
     {
+        /*print_r($arUserField);
+        echo "<br><br>";
+        print_r($arHtmlControl);*/
+
         /*
          * Свернуть/удалить. 
          */
-        $hideText = Loc::getMessage('IEX_COMPLEX_PROP_HIDE_TEXT');
-        $clearText = Loc::getMessage('IEX_COMPLEX_PROP_CLEAR_TEXT');
-        
+        $hideText = Loc::getMessage('COMPLEX_USER_FIELD_FORM_HIDE_TEXT');
+        $clearText = Loc::getMessage('COMPLEX_USER_FIELD_FORM_CLEAR_TEXT');
+        /*
+         * Подключить CSS и JS класса. 
+         */
+        self::showCss();
+        self::showJs();
+        /*
+         * Подготовить массив с параметрами полей пользовательского поля. 
+         */
+        if (!empty($arUserField['SETTINGS'])) {
+            $arFields = self::prepareSetting($arUserField['SETTINGS']);
+        } else {
+            return '<span>'.Loc::getMessage('COMPLEX_USER_FIELD_FORM_ERROR').'</span>';
+        }
+        /*
+         * HTML-формы редактирования значений.
+         */
+        $result = '';
+        /*
+         * Кнопка "свернуть/показать" для отображения значений комплексного поля. 
+         */
+        $result .= '<div class="mf-gray"><a class="cl mf-toggle">' . $hideText . '</a>';
+        /*
+         * Если свойство множественное, то также отображать кнопку "удалить". 
+         */
+        if($arUserField['MULTIPLE'] === 'Y'){
+            $result .= ' | <a class="cl mf-delete">' . $clearText . '</a></div>';
+        }
+        $result .= '<table class="mf-fields-list active">';
+
+        foreach ($arFields as $code => $arItem) {
+            if ($arItem['TYPE'] === 'string') {
+                $result .= self::showString($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
+            }
+        }
+
+        $result .= '</table>';
 
         return $result;
     }
@@ -74,6 +113,30 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
             </style>
             <?
         }
+    }
+
+    /**
+     * Сформировать HTML-код для текстового поля свойства.
+     * @param string $code Символьный код поля.
+     * @param string $title Название поля.
+     * @param array $arValue Значения полей свойства.
+     * @param array $arHtmlControl Имена элементов управления.
+     * @return string HTML текстового поля свойства.
+     */
+    private static function showString($code, $title, $arValue, $arHtmlControl)
+    {
+        $result = '';
+        /*
+         * Получить значение свойства для данного поля по его символьному коду
+         * либо установить пустое значение. 
+         */
+        $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
+        $result .= '<tr>
+                <td align="right">'.$title.': </td>
+                <td><input type="text" value="'.$v.'" name="'.$arHtmlControl['NAME'] . '['.$code.']"/></td>
+            </tr>';
+
+        return $result;
     }
 
     /**
@@ -172,11 +235,19 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
     /**
      * Преобразование значения для его сохранения.
      * @param array $arUserField Параметры поля.
-     * @param string $value Значение поля.
+     * @param array $value Значение поля.
      * @return string Значение поля.
      */
 	public static function OnBeforeSave($arUserField, $value): string
-    {
+    {/*
+        var_dump($_POST);
+        echo "<br><br>";
+        var_dump($arUserField);
+        echo "<br><br>";
+        var_dump($value);
+        echo "<br><br>end";
+        die();
+
         var_dump($_POST['NAME']);
         echo "<br>--------<br>";
         $nameOfField = $arUserField['FIELD_NAME'];
@@ -189,10 +260,9 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
 
         if (isset($_POST[$arUserField['FIELD_NAME']])) {
             $value = $_POST[$arUserField['FIELD_NAME']];
-        }
+        }*/
 
         $value = \Bitrix\Main\Web\Json::encode($value);
-        die();
 
         return $value;
     }
@@ -340,15 +410,114 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
         return $arResult;
     }
 
-    /*
+    /**
+     * Отображение стилей CSS.
+     */
+    private static function showCss()
+    {
+        /*
+         * Отобразить стили, если они ещё не были отображены ранее.
+         */
+        if (!self::$showedCss) {
+            self::$showedCss = true;
+            ?>
+            <style>
+                .cl {cursor: pointer;}
+                .mf-gray {color: #797777;}
+                .mf-fields-list {display: none; padding-top: 10px; margin-bottom: 10px!important; margin-left: -300px!important; border-bottom: 1px #e0e8ea solid!important;}
+                .mf-fields-list.active {display: block;}
+                .mf-fields-list td {padding-bottom: 5px;}
+                .mf-fields-list td:first-child {width: 300px; color: #616060;}
+                .mf-fields-list td:last-child {padding-left: 5px;}
+                .mf-fields-list input[type="text"] {width: 350px!important;}
+                .mf-fields-list textarea {min-width: 350px; max-width: 650px; color: #000;}
+                .mf-fields-list img {max-height: 150px; margin: 5px 0;}
+                .mf-img-table {background-color: #e0e8e9; color: #616060; width: 100%;}
+                .mf-fields-list input[type="text"].adm-input-calendar {width: 170px!important;}
+                .mf-file-name {word-break: break-word; padding: 5px 5px 0 0; color: #101010;}
+                .mf-fields-list input[type="text"].mf-inp-bind-elem {width: unset!important;}
+            </style>
+            <?
+        }
+    }
+
+    /**
+     * Подключение скриптов.
+     */
+    private static function showJs()
+    {
+        /*
+         * Показать/свернуть.
+         */
+        $showText = Loc::getMessage('COMPLEX_USER_FIELD_FORM_SHOW_TEXT');
+        $hideText = Loc::getMessage('COMPLEX_USER_FIELD_FORM_HIDE_TEXT');
+        /*
+         * Подключить jQuery. 
+         */
+        CJSCore::Init(array("jquery"));
+        /*
+         * Подключить скрипты класса, если они не были подключены ранее. 
+         */
+        if (!self::$showedJs) {
+            self::$showedJs = true;
+            ?>
+            <script>
+                /*
+                 * Переключение отображения "показать/свернуть". 
+                 */
+                $(document).on('click', 'a.mf-toggle', function (e) {
+                    e.preventDefault();
+
+                    var table = $(this).closest('tr').find('table.mf-fields-list');
+                    $(table).toggleClass('active');
+                    if ($(table).hasClass('active')){
+                        $(this).text('<?=$hideText?>');
+                    } else {
+                        $(this).text('<?=$showText?>');
+                    }
+                });
+                /*
+                 * При нажатии на "удалить" установить пустые значения или
+                 * значения по умолчанию для инпутов. 
+                 */
+                $(document).on('click', 'a.mf-delete', function (e) {
+                    e.preventDefault();
+
+                    var textInputs = $(this).closest('tr').find('input[type="text"]');
+                    $(textInputs).each(function (i, item) {
+                        $(item).val('');
+                    });
+
+                    var textarea = $(this).closest('tr').find('textarea');
+                    $(textarea).each(function (i, item) {
+                        $(item).text('');
+                    });
+
+                    var checkBoxInputs = $(this).closest('tr').find('input[type="checkbox"]');
+                    $(checkBoxInputs).each(function (i, item) {
+                        $(item).attr('checked', 'checked');
+                    });
+
+                    $(this).closest('tr').hide('slow');
+                });
+            </script>
+            <?
+        }
+    }
+
+    /**
+     * Метод, срабатываемый при получении данных из БД.
+     * Необходим для предварительной десериализации значений поля.
+     * @param array $arProperty Параметры пользовательского поля.
+     * @param array $arValue Массив значений поля.
+     * @return array Десериализованные значения поля из БД.
+     */
     public static function onAfterFetch($arProperty, $arValue): array
     {
         if (!empty($arValue["VALUE"])) {
             $arValue = \Bitrix\Main\Web\Json::decode(html_entity_decode($arValue["VALUE"]));
         }
-        print_r($arValue);
-        echo " BRRRRRRRR ";
-        print_r($arProperty);
+        
         return $arValue;
-    }*/
+    }
 }
