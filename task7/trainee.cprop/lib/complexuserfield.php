@@ -293,14 +293,6 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
     {
         $result = '';
 
-        /*print_r($code);
-        echo "<br><br>";
-        print_r($title);
-        echo "<br><br>";
-        print_r($strHTMLControlName);
-        echo "<br><br>";
-        die();*/
-
         $fileId = self::getFileIdFromPropValue($code, $strHTMLControlName);
 
         if (!empty($fileId)) {
