@@ -68,6 +68,8 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
         foreach ($arFields as $code => $arItem) {
             if ($arItem['TYPE'] === 'string') {
                 $result .= self::showString($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
+            } else if ($arItem['TYPE'] === 'file') {
+                $result .= self::showFile($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
             } else if ($arItem['TYPE'] === 'text') {
                 $result .= self::showTextarea($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
             } else if ($arItem['TYPE'] === 'date') {
@@ -185,8 +187,20 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
 	public static function OnBeforeSave($arUserField, $value): string
     {
         $arFields = self::prepareSetting($arUserField['SETTINGS']);
+        /*
+         * Дополнение массива значений значениями из визуальных редакторов.
+         */
         if (!empty($value)) {
             self::addHtmlFields($arFields, $value);
+        }
+        /*
+         * Для полей типа "файл" получить идентификаторы файлов
+         * в таблице файлов системы. 
+         */
+        foreach ($value as $code => $v) {
+            if ($arFields[$code]['TYPE'] === 'file') {
+                $value[$code] = self::prepareFileToDB($v);
+            }
         }
 
         $arResult = json_encode($value);
@@ -263,6 +277,162 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
                 <td align="right">'.$title.': </td>
                 <td><input type="text" value="'.$v.'" name="'.$arHtmlControl['NAME'] . '['.$code.']"/></td>
             </tr>';
+
+        return $result;
+    }
+
+    /**
+     * Сформировать HTML-код для файлового поля.
+     * @param string $code Символьный код поля.
+     * @param string $title Название поля.
+     * @param array $arValue Значения полей свойства.
+     * @param array $arHtmlControl Имена элементов управления.
+     * @return string HTML файлового поля.
+     */
+    private static function showFile($code, $title, $arValue, $strHTMLControlName)
+    {
+        $result = '';
+
+        /*print_r($code);
+        echo "<br><br>";
+        print_r($title);
+        echo "<br><br>";
+        print_r($strHTMLControlName);
+        echo "<br><br>";
+        die();*/
+
+        $fileId = self::getFileIdFromPropValue($code, $strHTMLControlName);
+
+        if (!empty($fileId)) {
+            /*
+             * Получить информацию о файле. 
+             */
+            $arPicture = CFile::GetByID($fileId)->Fetch();
+            /*
+             * Если информация о файле была успешно получена. 
+             */
+            if ($arPicture) {
+                /*
+                 * Получить информацию о пути до файла и его типе. 
+                 */
+                self::getFileInfo($arPicture, $strImageStorePath, $sImagePath, $fileType);
+                /*
+                 * Выбрать способ отображения в зависимости от того, является файл
+                 * изображением или нет. 
+                 */
+                $content = '';
+                if (in_array($fileType, ['png', 'jpg', 'jpeg', 'gif'])) {
+                    $content = '<p>' . $title . ':</p>' . '<img src="' . $sImagePath . '">';
+                } else {
+                    if ($type == 'admin') {
+                        $content = '<div class="mf-file-name">' . $arPicture['FILE_NAME'] . '</div>';
+                    } elseif ($type == 'public') {
+                        $content = '<p>' . $title . ':&nbsp' . $arPicture['FILE_NAME'] . '</p>';
+                    }
+                }
+                /*
+                 * Итоговый HTML для отображения файла-значения поля. 
+                 */
+                $result = '<tr>
+                <td align="right" valign="top">' . $title . ': </td>
+                <td>
+                    <table class="mf-img-table">
+                        <tr>
+                            <td>' . $content . '<br>
+                                <div>
+                                    <label><input name="' . $strHTMLControlName['NAME'] . '[' . $code . '][DEL]" value="Y" type="checkbox"> ' . Loc::getMessage("COMPLEX_USER_FIELD_FORM_DELETE_FILE_TEXT") . '</label>
+                                    <input name="' . $strHTMLControlName['NAME'] . '[' . $code . '][OLD]" value="' . $fileId . '" type="hidden">
+                                </div>
+                            </td>
+                        </tr>
+                    </table>                      
+                </td>
+                </tr>';
+            }
+        } else {
+            $result .= '<tr>
+                            <td align="right">'.$title.': </td>
+                            <td><input type="file" value="" name="'.$strHTMLControlName['NAME'].'['.$code.']"/></td>
+                        </tr>';
+        }
+
+        return $result;
+    }
+
+    /**
+     * Получить файл из значения указанного свойства.
+     * @param string $code Символьный код файлового поля свойства.
+     * @param array $arValue Значение свойства.
+     * @return int|string Идентификатор файла в системе либо пустая строка.
+     */
+    private static function getFileIdFromPropValue($code, $arValue)
+    {
+        $fileId;
+        if (
+            !empty($arValue['VALUE'][$code]) 
+            && !is_array($arValue['VALUE'][$code])
+        ) {
+            $fileId = $arValue['VALUE'][$code];
+        }
+        else if (!empty($arValue['VALUE'][$code]['OLD'])) {
+            $fileId = $arValue['VALUE'][$code]['OLD'];
+        }
+        else {
+            $fileId = '';
+        }
+
+        return $fileId;
+    }
+
+    /**
+     * Получить составляющие пути до файла и его расширение.
+     * @param array $arFile Массив с информацией о файле.
+     * @param string $strFileStorePath Путь до папки загрузок.
+     * @param string $sFilePath Полный путь до файла.
+     * @param string $fileType Тип файла.
+     */
+    private static function getFileInfo($arFile, &$strFileStorePath, &$sFilePath, &$fileType)
+    {
+        /*
+         * Получить путь для загрузки файлов. 
+         */
+        $strFileStorePath = COption::GetOptionString('main', 'upload_dir', 'upload');
+        /*
+         * Получить путь файла-значения поля.
+         */
+        $sFilePath = '/' . $strFileStorePath . '/' . $arFile['SUBDIR'] . '/' . $arFile['FILE_NAME'];
+        /*
+         * Расширение файла. 
+         */
+        $fileType = self::getExtension($sFilePath);
+    }
+
+    /**
+     * Метод для получения идентификатора файла в таблице файлов системы.
+     * @param array $arValue Значение файлового поля свойства.
+     * @return int $result Числовой идентификатор сохраненного и 
+     * зарегистрированного в системе файла.
+     */
+    private static function prepareFileToDB($arValue)
+    {
+        $result = false;
+        /*
+         * Удалить файл, если требуется. 
+         */
+        if (!empty($arValue['DEL']) && $arValue['DEL'] === 'Y' && !empty($arValue['OLD'])) {
+            CFile::Delete($arValue['OLD']);
+        /*
+         * Если удалять не нужно, то вернуть файл под ключом OLD.
+         */
+        } else if (!empty($arValue['OLD'])) {
+            $result = $arValue['OLD'];
+        /*
+         * Если нет файла, но задано его имя, то сохранить и 
+         * зарегистрировать его в таблице файлов.
+         */
+        } else if (!empty($arValue['name'])) {
+            $result = CFile::SaveFile($arValue, 'vote');
+        }
 
         return $result;
     }
@@ -517,6 +687,13 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
                     '</tr>');
             }
             /*
+             * Если выбрано комплексное поле, то установить его множественность.
+             */
+            $(document).ready(function() {
+                var multyCheckBox = $("input[name='MULTIPLE']");
+                $(multyCheckBox).attr('checked', 'checked');
+            });
+            /*
              * При изменении символьного кода соответствующе изменять имена полей для названия, сортировки и типа.
              */
             $(document).on('change', '.inp-code', function(){
@@ -676,5 +853,15 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
             </script>
             <?
         }
+    }
+
+    /**
+     * Получить расширение указанного файла.
+     * @param string $filePath Путь до файла.
+     * @return string Расширение файла.
+     */
+    private static function getExtension($filePath)
+    {
+        return array_pop(explode('.', $filePath));
     }
 }
