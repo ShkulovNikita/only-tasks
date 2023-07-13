@@ -67,15 +67,15 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
          */
         foreach ($arFields as $code => $arItem) {
             if ($arItem['TYPE'] === 'string') {
-                $result .= self::showString($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
+                $result .= self::showString($code, $arItem['TITLE'], $arHtmlControl);
             } else if ($arItem['TYPE'] === 'file') {
-                $result .= self::showFile($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
+                $result .= self::showFile($code, $arItem['TITLE'], $arHtmlControl);
             } else if ($arItem['TYPE'] === 'text') {
-                $result .= self::showTextarea($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
+                $result .= self::showTextarea($code, $arItem['TITLE'], $arHtmlControl);
             } else if ($arItem['TYPE'] === 'date') {
-                $result .= self::showDate($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
+                $result .= self::showDate($code, $arItem['TITLE'], $arHtmlControl);
             } else if ($arItem['TYPE'] === 'element') {
-                $result .= self::showBindElement($code, $arItem['TITLE'], $arHtmlControl, $arHtmlControl);
+                $result .= self::showBindElement($code, $arItem['TITLE'], $arHtmlControl);
             } else if ($arItem['TYPE'] === 'html') {
                 $result .= self::showHtmlElement($code, $arItem['TITLE'], $arUserField, $arHtmlControl);
             }
@@ -261,18 +261,17 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
      * Сформировать HTML-код для текстового поля.
      * @param string $code Символьный код поля.
      * @param string $title Название поля.
-     * @param array $arValue Значения полей свойства.
-     * @param array $arHtmlControl Имена элементов управления.
+     * @param array $arHtmlControl Имена элементов управления и значения.
      * @return string HTML текстового поля.
      */
-    private static function showString($code, $title, $arValue, $arHtmlControl)
+    private static function showString($code, $title, $arHtmlControl)
     {
         $result = '';
         /*
          * Получить значение свойства для данного поля по его символьному коду
          * либо установить пустое значение. 
          */
-        $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
+        $v = !empty($arHtmlControl['VALUE'][$code]) ? $arHtmlControl['VALUE'][$code] : '';
         $result .= '<tr>
                 <td align="right">'.$title.': </td>
                 <td><input type="text" value="'.$v.'" name="'.$arHtmlControl['NAME'] . '['.$code.']"/></td>
@@ -285,11 +284,10 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
      * Сформировать HTML-код для файлового поля.
      * @param string $code Символьный код поля.
      * @param string $title Название поля.
-     * @param array $arValue Значения полей свойства.
-     * @param array $arHtmlControl Имена элементов управления.
+     * @param array $arHtmlControl Имена элементов управления и значения.
      * @return string HTML файлового поля.
      */
-    private static function showFile($code, $title, $arValue, $strHTMLControlName)
+    private static function showFile($code, $title, $strHTMLControlName)
     {
         $result = '';
 
@@ -490,15 +488,14 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
      * Сформировать HTML-код для многострочного текстового поля.
      * @param string $code Символьный код поля.
      * @param string $title Название поля.
-     * @param array $arValue Значения полей свойства.
-     * @param array $strHTMLControlName Имена элементов управления.
+     * @param array $strHTMLControlName Имена элементов управления и значения.
      * @return string HTML многострочного текстового поля.
      */
-    public static function showTextarea($code, $title, $arValue, $strHTMLControlName)
+    public static function showTextarea($code, $title, $strHTMLControlName)
     {
         $result = '';
 
-        $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
+        $v = !empty($strHTMLControlName['VALUE'][$code]) ? $strHTMLControlName['VALUE'][$code] : '';
         $result .= '<tr>
                 <td align="right" valign="top">'.$title.': </td>
                 <td><textarea rows="8" name="'.$strHTMLControlName['NAME'].'['.$code.']">'.$v.'</textarea></td>
@@ -511,15 +508,14 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
      * Сформировать HTML-код для поля-даты.
      * @param string $code Символьный код поля.
      * @param string $title Название поля.
-     * @param array $arValue Значения полей свойства.
-     * @param array $strHTMLControlName Имена элементов управления.
+     * @param array $strHTMLControlName Имена элементов управления и значения.
      * @return string HTML поля-даты.
      */
-    public static function showDate($code, $title, $arValue, $strHTMLControlName)
+    public static function showDate($code, $title, $strHTMLControlName)
     {
         $result = '';
 
-        $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
+        $v = !empty($strHTMLControlName['VALUE'][$code]) ? $strHTMLControlName['VALUE'][$code] : '';
         $result .= '<tr>
                         <td align="right" valign="top">'.$title.': </td>
                             <td>
@@ -544,17 +540,16 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
      * Сформировать HTML-код для поля-привязки к элементу.
      * @param string $code Символьный код поля.
      * @param string $title Название поля.
-     * @param array $arValue Значения полей свойства.
      * @param array $strHTMLControlName Имена элементов управления.
      * @return string HTML поля-привязки к элементу.
      */
-    public static function showBindElement($code, $title, $arValue, $strHTMLControlName)
+    public static function showBindElement($code, $title, $strHTMLControlName)
     {
         $result = '';
         /*
          * Идентификатор элемента. 
          */
-        $v = !empty($arValue['VALUE'][$code]) ? $arValue['VALUE'][$code] : '';
+        $v = !empty($strHTMLControlName['VALUE'][$code]) ? $strHTMLControlName['VALUE'][$code] : '';
 
         $elUrl = '';
         if (!empty($v)) {
