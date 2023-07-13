@@ -11,15 +11,15 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
      * Метод-обработчик для задания комлексного типа пользовательского поля.
      * @return array Массив, описывающий поведение пользовательского поля.
      */
-	public static function GetUserTypeDescription(): array
-	{
-		return array(
-			"USER_TYPE_ID" => "complexhtml",
-			"CLASS_NAME" => "CComplexUserField",
-			"DESCRIPTION" => GetMessage("COMPLEX_USER_FIELD_NAME"),
-			"BASE_TYPE" => "string",
-		);
-	} 
+    public static function GetUserTypeDescription(): array
+    {
+        return array(
+            "USER_TYPE_ID" => "complexhtml",
+            "CLASS_NAME" => "CComplexUserField",
+            "DESCRIPTION" => GetMessage("COMPLEX_USER_FIELD_NAME"),
+            "BASE_TYPE" => "string",
+        );
+    } 
 
     /**
      * Получить HTML для работы с пользовательским полем.
@@ -27,7 +27,7 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
      * @param array $arHtmlControl Массив с именем текущего поля и его значением.
      * @return string HTML формы редактирования пользовательского поля.
      */
-	public static function GetEditFormHTML(array $arUserField, ?array $arHtmlControl): string
+    public static function GetEditFormHTML(array $arUserField, ?array $arHtmlControl): string
     {
         /*
          * Свернуть/удалить. 
@@ -184,7 +184,7 @@ class CComplexUserField extends \Bitrix\Main\UserField\Types\StringType
      * @param array $value Значение поля.
      * @return string Значение поля.
      */
-	public static function OnBeforeSave($arUserField, $value): string
+    public static function OnBeforeSave($arUserField, $value): string
     {
         $arFields = self::prepareSetting($arUserField['SETTINGS']);
         /*
