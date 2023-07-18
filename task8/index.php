@@ -11,6 +11,9 @@
     <link rel="stylesheet" type="text/css" href="styles/styles.css"/>
 </head>
 <body>
+<?php 
+require_once 'classes/user.php';
+?>
 <div class="container">
     <div class="row">
         <div class="col-md-4"></div>
@@ -18,6 +21,21 @@
             <h3>Заготовка главной страницы</h3>
         </div>
         <div class="col-md-4"></div>
+    </div>
+    <div class="row">
+        <div class="col-md-8">
+            <p>
+                <?php
+                    if (User::isAuthorized() === false) {
+                        ?>
+                        <a id="signin-button" class="button" href="signin.php">Войти</a>
+                        <?php
+                    } else {
+                        echo "Вход выполнен";
+                    }
+                ?>
+            </p>
+        </div>
     </div>
 </div>
 </body>
