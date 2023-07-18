@@ -13,6 +13,9 @@
 <body>
 <?php 
 require_once 'classes/user.php';
+require_once 'classes/drive.php';
+
+$files = Drive::getFiles();
 ?>
 <div class="container">
     <div class="row">
@@ -23,19 +26,23 @@ require_once 'classes/user.php';
         <div class="col-md-4"></div>
     </div>
     <div class="row">
-        <div class="col-md-8">
-            <p>
-                <?php
-                    if (User::isAuthorized() === false) {
-                        ?>
-                        <a id="signin-button" class="button" href="signin.php">Войти</a>
+        <p>
+            <?php
+                if (User::isAuthorized() === false) {
+                    ?>
+                    <a id="signin-button" class="button" href="signin.php">Войти</a>
+                    <?php
+                } else {
+                    foreach ($files as $file) { ?>
+                        <div class="col-md-3">
+                            <img src=<?=$file['preview']?> />
+                            <p><?=$file['name']?></p>
+                        </div>
                         <?php
-                    } else {
-                        echo "Вход выполнен";
                     }
-                ?>
-            </p>
-        </div>
+                }
+            ?>
+        </p>
     </div>
 </div>
 </body>
