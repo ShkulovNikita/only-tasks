@@ -1,0 +1,10 @@
+{
+    "require": {
+        "arhitector/yandex": "dev-master"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
+}
