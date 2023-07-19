@@ -109,6 +109,33 @@ class Drive
     }
 
     /**
+     * Просмотр файла.
+     * @param string $fileName Имя файла на Диске.
+     * @param string $subdir Подпапка внутри папки приложения.
+     * @return object Файл как ресурс.
+     */
+    public static function viewFile($fileName, $subdir = '')
+    {
+        try {
+            /*
+             * Получить файл как ресурс.
+             */
+            $fileResource = self::getResource($subdir . $fileName);
+            /*
+             * Проверить, существует ли он на Диске. 
+             */
+            $exists = $fileResource->has();
+            if ($exists) {
+                return $fileResource;
+            } else {
+                Session::setValue('error', 'Указанный файл не существует.');
+            }
+        } catch (Exception $ex) {
+            Session::setValue('error', 'Ошибка: ' . $ex);
+        }
+    }
+
+    /**
      * Получить ресурс по указанному пути.
      * @param string $subResource Подпапка внутри папки приложения либо файл.
      * @return object|bool Ресурс на Яндекс.Диске либо false.

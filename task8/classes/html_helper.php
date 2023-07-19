@@ -13,12 +13,11 @@ class HtmlHelper
      */
     public static function showHeader()
     {
-        $html = "<div class=\"row\">
+        $html = "
                     <div class=\"col-md-12\">
                         <h1>Задание 8</h1>
                         <hr>
                     </div>
-                </div>
                 ";
 
         return $html;
@@ -30,7 +29,11 @@ class HtmlHelper
      */
     public static function showFooter()
     {
-        $html = "<hr>";
+        $html = "
+                    <div class=\"col-md-12\">
+                        <hr>
+                    </div>
+                ";
         return $html;
     }
 

@@ -60,6 +60,7 @@ if (User::isAuthorized() === true) {
                         <img src=<?=$file['preview']?> class="file_preview">
                     <?php } ?>
                     <p class="file_name"><?=$file['name']?></p>
+                    <a href="view.php?name=<?=$file['name']?>" class="btn btn-success">Просмотр</a>
                     <form action="delete.php" method="POST">
                         <input type="hidden" name="fileForDelete" value="<?=$file['name']?>">
                         <input type="submit" class="btn btn-danger" value="Удалить">
