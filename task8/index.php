@@ -14,9 +14,10 @@
 </head>
 <body>
 <?php 
-require_once 'classes/user.php';
-require_once 'classes/drive.php';
-require_once 'classes/html_helper.php';
+require 'vendor/autoload.php';
+
+use AppClasses\{User, Drive, HtmlHelper};
+
 /*
  * Получение списка файлов. 
  */

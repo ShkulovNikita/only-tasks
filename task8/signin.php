@@ -12,8 +12,10 @@
 </head>
 <body>
 <?php
-    require_once 'classes/user.php';
-    require_once 'classes/application.php';
+    require 'vendor/autoload.php';
+
+    use AppClasses\{User, Application};
+
     $tokenLink = Application::GetAppTokenLink();
     /*
      * Если в форму было введено значение токена, то сохранить его. 

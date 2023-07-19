@@ -1,5 +1,7 @@
 <?php
 
+namespace AppClasses;
+
 /**
  * Файл со вспомогательными функциями для получения информации
  * о файле с Яндекс.Диска.
@@ -32,7 +34,7 @@ class FileHelper
     {
         $parts = explode('T', $date);
         $time = explode('+', $parts[1])[0];
-        $day = DateTime::createFromFormat('Y-m-d', $parts[0])->format('d.m.Y');
+        $day = \DateTime::createFromFormat('Y-m-d', $parts[0])->format('d.m.Y');
         return $time . ' ' . $day;
     }
 }

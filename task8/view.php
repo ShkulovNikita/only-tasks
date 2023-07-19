@@ -14,9 +14,9 @@
 </head>
 <body>
 <?php
-require_once 'classes/drive.php';
-require_once 'classes/html_helper.php';
-require_once 'classes/file_helper.php';
+require 'vendor/autoload.php';
+
+use AppClasses\{Drive, HtmlHelper, FileHelper};
 
 $file;
 if (isset($_GET['name'])) {

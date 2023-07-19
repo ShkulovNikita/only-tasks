@@ -1,6 +1,8 @@
 <?php
 
-require_once 'session.php';
+namespace AppClasses;
+
+require "$_SERVER[DOCUMENT_ROOT]/vendor/autoload.php";
 
 /**
  * Класс, предназначенный для вывода некоторых HTML-частей страниц.

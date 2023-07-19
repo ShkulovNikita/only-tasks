@@ -1,6 +1,8 @@
 <?php
 
-require_once 'session.php';
+namespace AppClasses;
+
+require "$_SERVER[DOCUMENT_ROOT]/vendor/autoload.php";
 
 /**
  * User - класс, отвечаюший за действия, связанные с пользователем приложения.

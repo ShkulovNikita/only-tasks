@@ -1,8 +1,8 @@
 <?php
 
-require_once 'user.php';
-require_once 'session.php';
-require_once "$_SERVER[DOCUMENT_ROOT]/vendor/autoload.php";
+namespace AppClasses;
+
+require "$_SERVER[DOCUMENT_ROOT]/vendor/autoload.php";
 
 /**
  * Класс, реализующий работу с библиотекой для Яндекс.Диска.
@@ -189,13 +189,13 @@ class Drive
             /*
              * Получить объект для работы с диском.
              */
-            $disk = new Arhitector\Yandex\Disk(User::getToken());
+            $disk = new \Arhitector\Yandex\Disk(User::getToken());
             /*
              * Получить указанную папку как ресурс.
              */
             $appResource = $disk->getResource('app:/' . $subResource);
             return $appResource;
-        } catch (Arhitector\Yandex\Client\Exception\UnauthorizedException $ex) {
+        } catch (\Arhitector\Yandex\Client\Exception\UnauthorizedException $ex) {
             Session::setValue('error', 'Ошибка авторизации: ' . $ex);
             return false;
         } catch (Exception $ex) {

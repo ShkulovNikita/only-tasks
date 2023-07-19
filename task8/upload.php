@@ -13,10 +13,10 @@
     <link rel="stylesheet" type="text/css" href="styles/styles.css"/>
 </head>
 <body>
-<?php 
-require_once 'classes/user.php';
-require_once 'classes/drive.php';
-require_once 'classes/html_helper.php';
+<?php
+require 'vendor/autoload.php';
+
+use AppClasses\{User, Drive, HtmlHelper};
 
 if (
     $_FILES && $_FILES["filename"]["error"] == UPLOAD_ERR_OK 
