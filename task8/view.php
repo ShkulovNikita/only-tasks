@@ -52,6 +52,10 @@ if (isset($_GET['name'])) {
             <p>Размер: <?=FileHelper::getFileSize($file->size)?></p>
             <p>Тип файла: <?=$file->mime_type?></p>
             <a href="<?=$file['docviewer']?>" target="_blank" class="btn btn-primary">Открыть в Яндекс.Диске</a>
+            <form action="download.php" method="POST">
+                <input type="hidden" name="download" value="<?=$file['name']?>">
+                <input type="submit" class="btn btn-info" value="Скачать">
+            </form>
             <form action="delete.php" method="POST">
                 <input type="hidden" name="fileForDelete" value="<?=$file['name']?>">
                 <input type="submit" class="btn btn-danger" value="Удалить">

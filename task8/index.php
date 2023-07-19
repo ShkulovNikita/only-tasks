@@ -54,6 +54,13 @@ if (User::isAuthorized() === true) {
         <!-- Вывод списка файлов -->
         <div class="row">
             <?php
+            if (count($files) == 0) {
+                ?>
+                <div class="col-md-6">
+                    <p>Нет загруженных файлов приложения на Диске.</p>
+                </div>
+                <?php
+            }
             foreach ($files as $file) { ?>
                 <div class="col-md-3 file_item">
                     <?php if (isset($file['preview'])) { ?>
@@ -61,6 +68,10 @@ if (User::isAuthorized() === true) {
                     <?php } ?>
                     <p class="file_name"><?=$file['name']?></p>
                     <a href="view.php?name=<?=$file['name']?>" class="btn btn-success">Просмотр</a>
+                    <form action="download.php" method="POST">
+                        <input type="hidden" name="download" value="<?=$file['name']?>">
+                        <input type="submit" class="btn btn-info" value="Скачать">
+                    </form>
                     <form action="delete.php" method="POST">
                         <input type="hidden" name="fileForDelete" value="<?=$file['name']?>">
                         <input type="submit" class="btn btn-danger" value="Удалить">

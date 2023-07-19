@@ -136,6 +136,49 @@ class Drive
     }
 
     /**
+     * Скачивание файла из Яндекс.Диска.
+     * @param string $fileName Имя файла на Диске.
+     * @param string $subdir Подпапка внутри папки приложения.
+     */
+    public static function downloadFile($fileName, $subdir = '')
+    {
+        try {
+            /*
+             * Получить файл как ресурс.
+             */
+            $fileResource = self::getResource($subdir . $fileName);
+            /*
+             * Проверить, существует ли он на Диске. 
+             */
+            $exists = $fileResource->has();
+            if ($exists) {
+                /*
+                 * Сохранить файл в папку temp. 
+                 */
+                $fileServerPath = "$_SERVER[DOCUMENT_ROOT]/temp/download/" . $fileName;
+                $fileTempDownloadResult = $fileResource->download($fileServerPath, true);
+                /*
+                 * Если файл был успешно загружен на сервер, то передать его пользователю. 
+                 */
+                if ($fileTempDownloadResult) {
+                    $contentType = $fileResource->mime_type;
+
+                    $file = $fileServerPath;
+                    header("Content-Type: $contentType");
+                    header('Content-Disposition: attachment; filename="' . $fileResource->name . '"');
+                    readfile($file);
+                    /*
+                     * Удалить файл с сервера. 
+                     */
+                    unlink($fileServerPath);
+                }
+            } 
+        } catch (Exception $ex) {
+            Session::setValue('error', 'Ошибка: ' . $ex);
+        }
+    }
+
+    /**
      * Получить ресурс по указанному пути.
      * @param string $subResource Подпапка внутри папки приложения либо файл.
      * @return object|bool Ресурс на Яндекс.Диске либо false.
@@ -184,7 +227,7 @@ class Drive
     {
         try {
             $fileName = $_FILES["filename"]["name"];
-            $path = "temp/" . $fileName;
+            $path = "temp/upload/" . $fileName;
             move_uploaded_file($_FILES["filename"]["tmp_name"], $path);
 
             $filePath = "$_SERVER[DOCUMENT_ROOT]/" . $path;
