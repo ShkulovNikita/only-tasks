@@ -74,12 +74,18 @@ class Drive
          */
         $fileName;
         /*
+         * Тип: загружается файл с устройства или через URL.
+         */
+        $sourceType;
+        /*
          * Определить, задан ли файл ссылкой или загружен пользователем с устройства. 
          */
-        if ($_FILES && $_FILES["filename"]["error"] == UPLOAD_ERR_OK) {
+        if ($_FILES && $_FILES['filename']['error'] == UPLOAD_ERR_OK) {
             self::getFilePath($filePath, $fileName);
+            $sourceType = 'file';
         } elseif (isset($_POST['fileurl']) && !empty($_POST['fileurl'])) {
             self::getFileUrl($filePath, $fileName);
+            $sourceType = 'url';
         }
         /*
          * Загрузить файл на Диск. 
@@ -89,10 +95,12 @@ class Drive
                 $resource = self::getResource($subdir . $fileName);
                 $resource->upload($filePath, true, true);
 
-                /**
-                 * Удалить файл после загрузки.
-                 */
-                unlink($filePath);
+                if ($sourceType === 'file') {
+                    /*
+                     * Удалить файл после загрузки.
+                     */
+                    unlink($filePath);
+                }
             }
         } catch (Exception $ex) {
             Session::setValue('error', 'Ошибка: ' . $ex);
@@ -110,6 +118,11 @@ class Drive
     {
         $urlValue = htmlspecialchars($_POST['fileurl']);
         $filePath = $urlValue;
+        /*
+         * Получить имя файла из URL.
+         */
+        $parts = explode('/', $urlValue);
+        $fileName = end($parts);
     }
 
     /**
