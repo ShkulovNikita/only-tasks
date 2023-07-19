@@ -7,6 +7,8 @@
     <!-- Подключение Bootstrap. -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
     <!-- Собственные стили. -->
     <link rel="stylesheet" type="text/css" href="styles/styles.css"/>
 </head>
@@ -14,36 +16,59 @@
 <?php 
 require_once 'classes/user.php';
 require_once 'classes/drive.php';
-
-$files = Drive::getFiles();
+require_once 'classes/html_helper.php';
+/*
+ * Получение списка файлов. 
+ */
+if (User::isAuthorized() === true) {
+    $files = Drive::getFiles();
+}
 ?>
 <div class="container">
+    <?=HtmlHelper::showHeader()?>
+    <!-- Кнопки для входа либо работы с файлами. -->
     <div class="row">
-        <div class="col-md-4"></div>
-        <div class="col-md-4">
-            <h3>Заготовка главной страницы</h3>
-        </div>
-        <div class="col-md-4"></div>
-    </div>
-    <div class="row">
-        <p>
-            <?php
-                if (User::isAuthorized() === false) {
-                    ?>
-                    <a id="signin-button" class="button" href="signin.php">Войти</a>
-                    <?php
-                } else {
-                    foreach ($files as $file) { ?>
-                        <div class="col-md-3">
-                            <img src=<?=$file['preview']?> />
-                            <p><?=$file['name']?></p>
-                        </div>
-                        <?php
-                    }
-                }
+        <?php
+        if (User::isAuthorized() === false) {
             ?>
-        </p>
+            <div class="col-md-4">
+                <a id="signin-button" class="btn btn-primary" href="signin.php">Войти</a>
+            </div>
+            <?php
+        } else {
+            ?>
+            <div class="col-md-5">
+                <!-- Кнопка "Выйти". -->
+                <a class="btn btn-danger" href="logout.php">Выйти</a>
+                <!-- Кнопка загрузки файла. -->
+                <a class="btn btn-success" href="upload.php">Загрузить файл</a>
+            </div>
+            <?php
+        }
+        ?>
     </div>
+    <!-- Вывод списка файлов. -->
+    <?php
+    if (User::isAuthorized() === true) {
+        ?>
+        <!-- Вывод списка файлов -->
+        <div class="row">
+            <?php
+            foreach ($files as $file) { ?>
+                <div class="col-md-3 file_item">
+                    <?php if (isset($file['preview'])) { ?>
+                        <img src=<?=$file['preview']?> class="file_preview">
+                    <?php } ?>
+                    <p class="file_name"><?=$file['name']?></p>
+                </div>
+                <?php
+            } 
+            ?>
+        </div>
+        <?php
+    }
+    ?>
+    <?=HtmlHelper::showFooter()?>
 </div>
 </body>
 </html>
