@@ -34,32 +34,6 @@ class Drive
     }
     
     /**
-     * Получить ресурс по указанному пути.
-     * @param string $subResource Подпапка внутри папки приложения либо файл.
-     * @return object|bool Ресурс на Яндекс.Диске либо false.
-     */
-    private static function getResource($subResource = '')
-    {
-        try {
-            /*
-             * Получить объект для работы с диском.
-             */
-            $disk = new Arhitector\Yandex\Disk(User::getToken());
-            /*
-             * Получить указанную папку как ресурс.
-             */
-            $appResource = $disk->getResource('app:/' . $subResource);
-            return $appResource;
-        } catch (Arhitector\Yandex\Client\Exception\UnauthorizedException $ex) {
-            Session::setValue('error', 'Ошибка авторизации: ' . $ex);
-            return false;
-        } catch (Exception $ex) {
-            Session::setValue('error', 'Ошибка: ' . $ex);          
-            return false;  
-        }
-    }
-
-    /**
      * Загрузка файла на Яндекс.Диск.
      * @param string $subdir Подпапка внутри папки приложения.
      */
@@ -108,6 +82,56 @@ class Drive
         }
 
         return true;
+    }
+
+    /**
+     * Удаление файла с Яндекс.Диска.
+     * @param string $fileName Имя файла на Диске.
+     * @param string $subdir Подпапка внутри папки приложения.
+     */
+    public static function deleteFile($fileName, $subdir = '')
+    {
+        try {
+            /*
+             * Получить файл как ресурс.
+             */
+            $fileResource = self::getResource($subdir . $fileName);
+            /*
+             * Проверить, существует ли он на Диске. 
+             */
+            $exists = $fileResource->has();
+            if ($exists) {
+                $fileResource->delete();
+            }
+        } catch (Exception $ex) {
+            Session::setValue('error', 'Ошибка: ' . $ex);
+        }
+    }
+
+    /**
+     * Получить ресурс по указанному пути.
+     * @param string $subResource Подпапка внутри папки приложения либо файл.
+     * @return object|bool Ресурс на Яндекс.Диске либо false.
+     */
+    private static function getResource($subResource = '')
+    {
+        try {
+            /*
+             * Получить объект для работы с диском.
+             */
+            $disk = new Arhitector\Yandex\Disk(User::getToken());
+            /*
+             * Получить указанную папку как ресурс.
+             */
+            $appResource = $disk->getResource('app:/' . $subResource);
+            return $appResource;
+        } catch (Arhitector\Yandex\Client\Exception\UnauthorizedException $ex) {
+            Session::setValue('error', 'Ошибка авторизации: ' . $ex);
+            return false;
+        } catch (Exception $ex) {
+            Session::setValue('error', 'Ошибка: ' . $ex);          
+            return false;  
+        }
     }
 
     /**

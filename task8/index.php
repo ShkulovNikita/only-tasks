@@ -60,6 +60,10 @@ if (User::isAuthorized() === true) {
                         <img src=<?=$file['preview']?> class="file_preview">
                     <?php } ?>
                     <p class="file_name"><?=$file['name']?></p>
+                    <form action="delete.php" method="POST">
+                        <input type="hidden" name="fileForDelete" value="<?=$file['name']?>">
+                        <input type="submit" class="btn btn-danger" value="Удалить">
+                    </form>
                 </div>
                 <?php
             } 
