@@ -3,8 +3,8 @@
 namespace AppClasses;
 
 /**
- * Файл со вспомогательными функциями для получения информации
- * о файле с Яндекс.Диска.
+ * Файл со вспомогательными функциями для отображения
+ * информации о файлах.
  */
 class FileHelper 
 {
@@ -28,7 +28,8 @@ class FileHelper
 
     /**
      * Преобразовать дату-время в удобочитаемый формат.
-     * @param 
+     * @param DateTime $date Дата.
+     * @return string Дата в преобразованном формате.
      */
     public static function getFileDate($date)
     {
@@ -36,5 +37,28 @@ class FileHelper
         $time = explode('+', $parts[1])[0];
         $day = \DateTime::createFromFormat('Y-m-d', $parts[0])->format('d.m.Y');
         return $time . ' ' . $day;
+    }
+
+    /**
+     * Получить иконку-превью для файла.
+     * @param string $mimeType Тип файла.
+     * @return string Ссылка на локальный файл иконки.
+     */
+    public static function getFilePreview($mimeType)
+    {
+        $serverPath = 'images/previews/';
+        if (str_contains($mimeType, 'text/plain')) {
+            return $serverPath . 'file-earmark-text.svg';
+        } elseif (str_contains($mimeType, 'image')) {
+            return $serverPath . 'file-earmark-image.svg';
+        } elseif (str_contains($mimeType, 'video')) {
+            return $serverPath . 'file-earmark-play.svg';
+        } elseif (str_contains($mimeType, 'x-dosexec')) {
+            return $serverPath . 'filetype-exe.svg';
+        } elseif (str_contains($mimeType, 'audio')) {
+            return $serverPath . 'file-earmark-music.svg';
+        } else {
+            return $serverPath . 'file-earmark.svg';
+        }
     }
 }

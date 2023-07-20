@@ -21,15 +21,19 @@ if (isset($_GET['name'])) {
         <!-- Изображение для файла. -->
         <div class="col-md-6" class="file-image">
             <?php
-            if (str_contains($file->mime_type, 'image') && isset($file['sizes'])) {
+            if (isset($file['sizes'])) {
                 foreach ($file['sizes'] as $fileSize) {
                     if ($fileSize['name'] == 'XL') { 
                         ?>
-                        <img class="file-image__image" src="<?=$fileSize['url']?>">
+                        <img src="<?=$fileSize['url']?>" class="file-image__image">
                         <?php
                         break;
                     }
                 }
+            } else {
+                ?>
+                <img src="<?=FileHelper::getFilePreview($file->mime_type)?>" class="file-image__image">
+                <?php
             }
             ?>
         </div>

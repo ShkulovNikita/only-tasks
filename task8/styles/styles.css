@@ -7,3 +7,14 @@
     background-position: 10px;
     background-repeat: no-repeat;
 }
+
+/* Превью в списке файлов. */
+.file-list__preview-image {
+    height: 200px;
+}
+
+/* Превью на странице просмотра. */
+.file-image__image {
+    width: 95%;
+    max-height: 75%;
+}

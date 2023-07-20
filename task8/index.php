@@ -1,7 +1,7 @@
 <?php
 require 'vendor/autoload.php';
 
-use AppClasses\{User, Drive, HtmlHelper};
+use AppClasses\{User, Drive, HtmlHelper, FileHelper};
 
 echo HtmlHelper::showProlog('Главная страница');
 ?>
@@ -53,9 +53,17 @@ if (User::isAuthorized() === true) {
             }
             foreach ($files as $file) { ?>
                 <div class="col-md-3 file_item">
-                    <?php if (isset($file['preview'])) { ?>
-                        <img src=<?=$file['preview']?> class="file_preview">
-                    <?php } ?>
+                    <?php 
+                    if (isset($file['preview'])) { 
+                        ?>
+                        <img src="<?=$file['preview']?>" class="file-list__preview-image">
+                        <?php 
+                    } else {
+                        ?>
+                        <img src="<?=FileHelper::getFilePreview($file->mime_type)?>" class="file-list__preview-image">
+                        <?php
+                    }
+                    ?>
                     <p class="file_name"><?=$file['name']?></p>
                     <a href="view.php?name=<?=$file['name']?>" class="btn btn-success">Просмотр</a>
                     <form action="download.php" method="POST">
