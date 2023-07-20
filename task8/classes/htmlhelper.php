@@ -35,12 +35,28 @@ class HtmlHelper
      * @return string HTML-разметка хэдера.
      */
     public static function showHeader()
-    {
+    {   
+        $toolbar = '';
+        if (User::isAuthorized() === true) {
+            $toolbar .= "
+                            <div class=\"row\">
+                                <div class=\"col-5\">
+                                    <a class=\"btn btn-danger\" href=\"logout.php\">Выйти</a>
+                                    <a class=\"btn btn-success\" href=\"upload.php\">Загрузить файл</a>
+                                    <a class=\"btn btn-primary\" href=\"createdir.php\">Создать папку</a>
+                                </div>
+                            </div>
+                        ";
+        }
         $html = "
-                    <div class=\"col-md-12\">
-                        <h1>Задание 8</h1>
-                        <hr>
+                    <div class=\"row\">
+                        <div class=\"col-12\">
+                            <a href=\"index.php\" class=\"header header__title\">
+                                <h1>Задание 8</h1>
+                            </a>
+                        </div>
                     </div>
+                    $toolbar
                 ";
 
         return $html;

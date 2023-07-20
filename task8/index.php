@@ -18,7 +18,7 @@ if (User::isAuthorized() === true) {
     $files = Drive::getFiles();
 }
 ?>
-<div class="container">
+<div class="container-fluid">
     <?=HtmlHelper::showHeader()?>
     <!-- Кнопки для входа либо работы с файлами. -->
     <div class="row">
@@ -27,15 +27,6 @@ if (User::isAuthorized() === true) {
             ?>
             <div class="col-md-4">
                 <a id="signin-button" class="btn btn-primary" href="signin.php">Войти</a>
-            </div>
-            <?php
-        } else {
-            ?>
-            <div class="col-md-5">
-                <!-- Кнопка "Выйти". -->
-                <a class="btn btn-danger" href="logout.php">Выйти</a>
-                <!-- Кнопка загрузки файла. -->
-                <a class="btn btn-success" href="upload.php">Загрузить файл</a>
             </div>
             <?php
         }

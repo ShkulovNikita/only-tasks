@@ -1,5 +1,42 @@
+.container-fluid {
+    padding-left: 0rem;
+    padding-right: 0rem;
+    overflow: hidden;
+}
+
+/* Стили хэдера */
+.header {
+    display: block;
+    height: 80px;
+    background-color: beige;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: darkgrey;
+}
+
+.header__title {
+    color:dimgray;
+    text-decoration: none;
+}
+
+.header__title:link {
+    text-decoration: none;
+}
+
+.header__title:visited {
+    text-decoration: none;
+}
+
+.header__title:hover {
+    text-decoration: none;
+}
+
+.header__title:active {
+    text-decoration: none;
+}
+
 /* Кнопка с оформлением Яндекса. */
-.yandex_button {
+.yandex-button {
     padding-left: 50px;
     border: 1px solid #FFCC00;
     background-color: #FFCC00;

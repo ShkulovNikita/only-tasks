@@ -17,7 +17,7 @@ if (isset($_GET['name'])) {
 }
 ?>
 
-<div class="container">
+<div class="container-fluid">
     <div class="row">
         <?=HtmlHelper::showHeader();?>
     </div>
@@ -48,7 +48,7 @@ if (isset($_GET['name'])) {
             <p>Последнее изменение: <?=FileHelper::getFileDate($file->modified)?></p>
             <p>Размер: <?=FileHelper::getFileSize($file->size)?></p>
             <p>Тип файла: <?=$file->mime_type?></p>
-            <a href="<?=$file['docviewer']?>" target="_blank" class="btn btn-secondary yandex_button">Открыть в Яндекс.Диске</a>
+            <a href="<?=$file['docviewer']?>" target="_blank" class="btn btn-secondary yandex-button">Открыть в Яндекс.Диске</a>
             <form action="download.php" method="POST">
                 <input type="hidden" name="download" value="<?=$file['name']?>">
                 <input type="submit" class="btn btn-info" value="Скачать">
