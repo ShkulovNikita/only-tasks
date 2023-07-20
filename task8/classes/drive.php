@@ -96,16 +96,20 @@ class Drive
     public static function deleteFile($fileName, $subdir = '')
     {
         try {
-            /*
-             * Получить файл как ресурс.
-             */
-            $fileResource = self::getResource($subdir . $fileName);
-            /*
-             * Проверить, существует ли он на Диске. 
-             */
-            $exists = $fileResource->has();
-            if ($exists) {
-                $fileResource->delete();
+            if ($fileName === '') {
+                Session::setValue('error', 'Не указан файл.');
+            } else {
+                /*
+                 * Получить файл как ресурс.
+                 */
+                $fileResource = self::getResource($subdir . $fileName);
+                /*
+                 * Проверить, существует ли он на Диске. 
+                 */
+                $exists = $fileResource->has();
+                if ($exists) {
+                    $fileResource->delete();
+                }
             }
         } catch (Exception $ex) {
             Session::setValue('error', 'Ошибка: ' . $ex);
@@ -121,6 +125,10 @@ class Drive
     public static function viewFile($fileName, $subdir = '')
     {
         try {
+            if ($fileName === '') {
+                Session::setValue('error', 'Не указан файл.');
+                return '';
+            }
             /*
              * Получить файл как ресурс.
              */
@@ -133,9 +141,11 @@ class Drive
                 return $fileResource;
             } else {
                 Session::setValue('error', 'Указанный файл не существует.');
+                return '';
             }
         } catch (Exception $ex) {
             Session::setValue('error', 'Ошибка: ' . $ex);
+            return '';
         }
     }
 
@@ -179,6 +189,134 @@ class Drive
             } 
         } catch (Exception $ex) {
             Session::setValue('error', 'Ошибка: ' . $ex);
+        }
+    }
+
+    /**
+     * Добавить и отредактировать метаинформацию о файле.
+     * @param Resource/Closed $file Файл как ресурс.
+     */
+    public static function editProperties($file)
+    {
+        $newProperties = array_combine(
+            $_POST['newPropertyKey'], 
+            $_POST['newPropertyValue']
+        );
+        $errors = '';
+        /*
+         * Добавить новую метаинформацию.
+         */
+        self::addProperties($file, $newProperties, $errors);
+        /*
+         * Отредактировать уже существующие свойства. 
+         */
+        self::editProps($file, $errors);
+        /*
+         * Отобразить ошибки, если есть. 
+         */
+        if ($errors !== '') {
+            Session::setValue('error', 'Ошибки:<br>' . $errors);
+        }
+    }
+
+    /**
+     * Добавить к файлу метаинформацию, которой у него не было 
+     * задано ранее.
+     * @param Resource/Closed $file Файл как ресурс.
+     * @param array $properties Массив пар ключ-значение,
+     * представляющие собой добавляемую к файлу метаинформацию.
+     * @param string $errors Переменная, в которую записываются ошибки,
+     * возникшие в процессе работы метода.
+     */
+    private static function addProperties($file, $properties, &$errors)
+    {
+        foreach ($properties as $propKey => $propValue) {
+            $propKey = htmlspecialchars($propKey);
+            $propValue = htmlspecialchars($propValue);
+            /* 
+             * Пропустить полностью незаполненные формы. 
+             */
+            if ($propKey == '' && $propValue == '') {
+                continue;
+            }
+            /*
+             * Если не задан ключ либо значение, 
+             * то данное значение игнорируется с выводом ошибки. 
+             */
+            if ($propKey == '') {
+                $errors .= "- Пустое значение ключа.<br>";
+                continue;
+            }
+            if ($propValue == '') {
+                $errors .= "- Пустое значение свойства.<br>";
+                continue;
+            }
+            /*
+             * Добавить метаинформацию файлу через API. 
+             */
+            try {
+                $file->set($propKey, $propValue);
+            } catch (Exception $ex) {
+                $errors .= '- ' . $ex . "<br>";
+                continue;
+            }
+        }
+    }
+
+    /**
+     * Отредактировать метаинформацию файла.
+     * @param Resource/Closed $file Файл как ресурс.
+     * @param string $errors Переменная, в которую записываются ошибки,
+     * возникшие в процессе работы метода.
+     */
+    private static function editProps($file, &$errors)
+    {
+        /*
+         * Получить массив с метаинформацией о файле. 
+         */
+        $fileProps = $file->getProperties();
+        /*
+         * Если свойств нет, то обновлять ничего не нужно. 
+         */
+        if (!$fileProps) {
+            return;
+        }
+        /*
+         * Найти в массиве $_POST новые значения свойств. 
+         */
+        foreach ($fileProps as $propKey => $propValue) {
+            /*
+             * Игнорировать значения, которые не были переданы. 
+             */
+            if (!isset($_POST[$propKey])) {
+                continue;
+            }
+            /*
+             * Значение из формы. 
+             */
+            $newValue = $_POST[$propKey];
+            /*
+             * Если новое значение пустое, то удалить свойство. 
+             */
+            if ($newValue == '') {
+                try {
+                    $file->set($propKey, null);
+                } catch (Exception $ex) {
+                    $errors .= '- ' . $ex . "\n";
+                    continue;
+                }
+            } elseif ($newValue != $propValue) {
+                /*
+                 * Если старое и новое значения не совпадают,
+                 * то обновить значение в файле. 
+                 */
+                try {
+                    $file->set($propKey, $newValue);
+                } catch (Exception $ex) {
+                    $errors .= '- ' . $ex . "\n";
+                    continue;
+                }
+            }
         }
     }
 

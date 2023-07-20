@@ -69,7 +69,7 @@ class HtmlHelper
     public static function showFooter()
     {
         $html = "
-                    <div class=\"col-md-12\">
+                    <div class=\"col-12\">
                         <hr>
                     </div>
                 ";
