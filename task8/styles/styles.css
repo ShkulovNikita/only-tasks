@@ -1,0 +1,9 @@
+/* Кнопка с оформлением Яндекса. */
+.yandex_button {
+    padding-left: 50px;
+    border: 1px solid #FFCC00;
+    background-color: #FFCC00;
+    background-image: url(/images/yadisk.svg);
+    background-position: 10px;
+    background-repeat: no-repeat;
+}

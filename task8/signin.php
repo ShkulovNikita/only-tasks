@@ -16,7 +16,7 @@ if (isset($_POST['token']) && !empty($_POST['token'])) {
 }
 ?>
 <form method="POST">
-    <a class="btn btn-primary" href="<?=$tokenLink?>" target="_blank">Получить токен</a>
+    <a href="<?=$tokenLink?>" target="_blank" class="btn btn-secondary yandex_button">Получить токен</a>
     <input type="text" name="token" value="<?=User::getToken()?>"/>
     <input type="submit">
 </form>

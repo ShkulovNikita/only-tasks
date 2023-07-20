@@ -40,7 +40,7 @@ if (isset($_GET['name'])) {
             <p>Последнее изменение: <?=FileHelper::getFileDate($file->modified)?></p>
             <p>Размер: <?=FileHelper::getFileSize($file->size)?></p>
             <p>Тип файла: <?=$file->mime_type?></p>
-            <a href="<?=$file['docviewer']?>" target="_blank" class="btn btn-primary">Открыть в Яндекс.Диске</a>
+            <a href="<?=$file['docviewer']?>" target="_blank" class="btn btn-secondary yandex_button">Открыть в Яндекс.Диске</a>
             <form action="download.php" method="POST">
                 <input type="hidden" name="download" value="<?=$file['name']?>">
                 <input type="submit" class="btn btn-info" value="Скачать">
