@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+<html>
+<head>
 <?php
 require 'vendor/autoload.php';
 
@@ -5,6 +8,7 @@ use AppClasses\{Drive, HtmlHelper, FileHelper};
 
 echo HtmlHelper::showProlog('Просмотр файла');
 ?>
+</head>
 <body>
 <?php
 $file;
@@ -61,3 +65,4 @@ if (isset($_GET['name'])) {
     </div>
 </div>
 </body>
+</html>

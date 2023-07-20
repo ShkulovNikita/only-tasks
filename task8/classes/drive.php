@@ -54,12 +54,16 @@ class Drive
         /*
          * Определить, задан ли файл ссылкой или загружен пользователем с устройства. 
          */
-        if ($_FILES && $_FILES['filename']['error'] == UPLOAD_ERR_OK) {
-            self::getFilePath($filePath, $fileName);
-            $sourceType = 'file';
-        } elseif (isset($_POST['fileurl']) && !empty($_POST['fileurl'])) {
-            self::getFileUrl($filePath, $fileName);
-            $sourceType = 'url';
+        if (isset($_POST['type']) && $_POST['type'] == 'url') {
+            if (isset($_POST['fileurl']) && !empty($_POST['fileurl'])) {
+                self::getFileUrl($filePath, $fileName);
+                $sourceType = 'url';
+            }
+        } else {
+            if ($_FILES && $_FILES['filename']['error'] == UPLOAD_ERR_OK) {
+                self::getFilePath($filePath, $fileName);
+                $sourceType = 'file';
+            }
         }
         /*
          * Загрузить файл на Диск. 
@@ -216,7 +220,11 @@ class Drive
          * Получить имя файла из URL.
          */
         $parts = explode('/', $urlValue);
-        $fileName = end($parts);
+        if (count($parts) > 0) {
+            $fileName = end($parts);
+        } else {
+            $fileName = '';
+        }
     }
 
     /**

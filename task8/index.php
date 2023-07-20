@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+<html>
+<head>
 <?php
 require 'vendor/autoload.php';
 
@@ -5,6 +8,7 @@ use AppClasses\{User, Drive, HtmlHelper, FileHelper};
 
 echo HtmlHelper::showProlog('Главная страница');
 ?>
+</head>
 <body>
 <?php 
 /*

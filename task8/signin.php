@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+<html>
+<head>
 <?php
 require 'vendor/autoload.php';
 
@@ -5,6 +8,7 @@ use AppClasses\{User, HtmlHelper, Application};
 
 echo HtmlHelper::showProlog('Авторизация');
 ?>
+</head>
 <body>
 <?php
 $tokenLink = Application::GetAppTokenLink();
@@ -22,3 +26,4 @@ if (isset($_POST['token']) && !empty($_POST['token'])) {
 </form>
 <a href="index.php">Назад</a>
 </body>
+</html>
