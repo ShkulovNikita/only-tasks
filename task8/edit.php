@@ -154,14 +154,44 @@ $(document).ready(function() {
             type: 'POST',
             data: { "filename": filename },
             success: function(response) { 
-                editorField.val(response);
-                editorField.prop('disabled', false);
-                editorButton.prop('disabled', false);
+                /*
+                 * Проверить, возникли ли ошибки чтения файла. 
+                 */
+                const errorMessageLength = 8;
+                /*
+                 * Если полученный текст короче, чем "Ошибка: ", то
+                 * ошибок не было. 
+                 */
+                if (response.length < errorMessageLength) {
+                    setFileText(editorField, editorButton, response);
+                } else {
+                    /*
+                     * Получить первые 8 символов. 
+                     */
+                    let possibleErrorMess = response.slice(0, errorMessageLength);
+                    /*
+                     * Если есть ошибка, то оставить поле заблокированным. 
+                     */
+                    if (possibleErrorMess == 'Ошибка: ') {
+                        editorField.val(response);
+                    } else {
+                        setFileText(editorField, editorButton, response);
+                    }
+                }
             },
             error: function() {
                 editorField.val('Произошла ошибка.');
             }
         });
+    }
+
+    /**
+     * Отобразить для редактирования текст из файла в указанном поле.
+     */
+    function setFileText(editorField, editorButton, text) {
+        editorField.val(text);
+        editorField.prop('disabled', false);
+        editorButton.prop('disabled', false);
     }
 
     /**

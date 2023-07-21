@@ -179,7 +179,7 @@ class Drive
                  * Сохранить файл в папку temp. 
                  */
                 $fileServerPath = "$_SERVER[DOCUMENT_ROOT]/temp/download/" . $fileName;
-                $fileTempDownloadResult = self::downloadFileToServer($fileResource, $fileServerPath);
+                $fileTempDownloadResult = $fileResource->download($fileServerPath, true);
                 /*
                  * Если файл был успешно загружен на сервер, то передать его пользователю. 
                  */
@@ -229,16 +229,30 @@ class Drive
     }
 
     /**
-     * Сохранить файл с Яндекс.Диска в указанную папку сервера.
-     * @param Resource/Closed $file Файл как ресурс.
-     * @param string $serverPath Папка на сервере, в которую следует сохранить файл.
-     * @return bool true - удалось скачать файл, иначе false.
+     * Сохранить файл с Яндекс.Диска для редактирования.
+     * @param string $fileName Имя файла на Диске.
+     * @param string $subdir Подпапка внутри папки приложения.
+     * @return int|bool Число - удалось скачать файл, иначе false.
      */
-    public static function downloadFileToServer($file, $serverPath)
+    public static function downloadEditFile($fileName, $subdir = '')
     {
         try {
-            $fileDownloadResult = $file->download($serverPath, true);
-            return $fileDownloadResult;
+            /*
+             * Получить файл как ресурс.
+             */
+            $fileResource = self::getResource($subdir . $fileName);
+            /*
+             * Проверить, существует ли он на Диске. 
+             */
+            $exists = false;
+            if ($fileResource) {
+                $exists = $fileResource->has();
+            }
+            if ($exists) {
+                $serverPath = "$_SERVER[DOCUMENT_ROOT]/temp/edit/" . $fileName;
+                $fileDownloadResult = $fileResource->download($serverPath, true);
+                return $fileDownloadResult;
+            }
         } catch (\Exception $ex) {
             Session::setValue('error', 'Ошибка: ' . $ex);
             return false;
