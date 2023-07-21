@@ -15,6 +15,7 @@ echo HtmlHelper::showProlog('Авторизация');
 $tokenLink = Application::getAppTokenLink();
 AuthorizationController::signin();
 ?>
+<?=HtmlHelper::showMessage('error');?>
 <form method="POST">
     <a href="<?=$tokenLink?>" target="_blank" class="btn btn-secondary yandex-button">Получить токен</a>
     <input type="text" name="token" value="<?=User::getToken()?>"/>

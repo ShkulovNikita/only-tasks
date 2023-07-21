@@ -22,9 +22,17 @@ class User
             Session::setValue('token', $token);
             Session::setValue('auth', true);
 
-            return true;
+            /*
+             * Попробовать получить по токену файлы из папки пользователя.
+             */
+            $result = Drive::getFiles('');
+            if ($result !== []) {
+                return true;
+            } else {
+                return "Неверный токен";
+            }
         } else {
-            return "Неверный токен";
+            return "Пустой токен";
         }
     }
 
