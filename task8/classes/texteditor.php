@@ -46,7 +46,7 @@ class TextEditor
         /*
          * Проверить, существует ли файл. 
          */
-        $filePath = "$_SERVER[DOCUMENT_ROOT]/temp/edit/";
+        $filePath = Application::getEditPath();
         if (!file_exists($filePath . $filename)) {
             Session::setValue('error', 'Ошибка: файл не найден.');
             return;
@@ -76,7 +76,7 @@ class TextEditor
      */
     private static function readTextFile($filename, &$error)
     {
-        $filePath = "$_SERVER[DOCUMENT_ROOT]/temp/edit/" . $filename;
+        $filePath = Application::getEditPath() . $filename;
         try {
             if (file_exists($filePath)) {
                 /*

@@ -164,7 +164,7 @@ class Drive
                 /*
                  * Сохранить файл в папку temp. 
                  */
-                $fileServerPath = "$_SERVER[DOCUMENT_ROOT]/temp/download/" . $fileName;
+                $fileServerPath = Application::getDownloadPath() . $fileName;
                 $fileTempDownloadResult = $fileResource->download($fileServerPath, true);
                 /*
                  * Если файл был успешно загружен на сервер, то передать его пользователю. 
@@ -235,7 +235,7 @@ class Drive
                 $exists = $fileResource->has();
             }
             if ($exists) {
-                $serverPath = "$_SERVER[DOCUMENT_ROOT]/temp/edit/" . $fileName;
+                $serverPath = Application::getEditPath() . $fileName;
                 $fileDownloadResult = $fileResource->download($serverPath, true);
                 return $fileDownloadResult;
             }

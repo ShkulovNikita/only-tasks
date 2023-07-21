@@ -12,7 +12,7 @@ echo HtmlHelper::showProlog('Авторизация');
 </head>
 <body>
 <?php
-$tokenLink = Application::GetAppTokenLink();
+$tokenLink = Application::getAppTokenLink();
 AuthorizationController::signin();
 ?>
 <form method="POST">
