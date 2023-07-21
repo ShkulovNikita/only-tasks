@@ -2,7 +2,6 @@
 
 require 'vendor/autoload.php';
 
-use AppClasses\User;
+use Controllers\AuthorizationController;
 
-User::logout();
-header("Location: " . "index.php");
+AuthorizationController::logout();

@@ -4,7 +4,8 @@
 <?php
 require 'vendor/autoload.php';
 
-use AppClasses\{User, Drive, HtmlHelper, FileHelper};
+use AppClasses\{User, HtmlHelper, FileHelper};
+use Controllers\FileController;
 
 echo HtmlHelper::showProlog('Главная страница');
 ?>
@@ -14,13 +15,11 @@ echo HtmlHelper::showProlog('Главная страница');
 /*
  * Получение списка файлов. 
  */
-if (User::isAuthorized() === true) {
-    $files = Drive::getFiles();
-}
+$files = FileController::index();
 ?>
 <div class="container-fluid">
     <?=HtmlHelper::showHeader()?>
-    <!-- Кнопки для входа либо работы с файлами. -->
+    <!-- Кнопка для авторизации. -->
     <div class="row">
         <?php
         if (User::isAuthorized() === false) {
@@ -41,13 +40,13 @@ if (User::isAuthorized() === true) {
             <?php
             if (count($files) == 0) {
                 ?>
-                <div class="col-md-6">
+                <div class="col-6">
                     <p>Нет загруженных файлов приложения на Диске.</p>
                 </div>
                 <?php
             }
             foreach ($files as $file) { ?>
-                <div class="col-md-3 file_item">
+                <div class="col-3 file_item">
                     <?php 
                     if (isset($file['preview'])) { 
                         ?>

@@ -36,6 +36,7 @@ class Drive
     /**
      * Загрузка файла на Яндекс.Диск.
      * @param string $subdir Подпапка внутри папки приложения.
+     * @return string Имя загруженного файла.
      */
     public static function uploadFile($subdir = '')
     {
@@ -70,7 +71,7 @@ class Drive
          */
         self::uploadFileToYandex($filePath, $fileName, $sourceType, $subdir);
 
-        return true;
+        return $fileName;
     }
 
     /**
@@ -253,13 +254,6 @@ class Drive
      */
     public static function uploadFileToYandex($filePath, $fileName, $sourceType, $subdir = '')
     {
-        print_r($filePath);
-        echo "<br>";
-        print_r($fileName);
-        echo "<br>";
-        print_r($sourceType);
-        echo "<br>";
-
         try {
             if (!empty($filePath)) {
                 $resource = self::getResource($subdir . $fileName);

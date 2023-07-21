@@ -43,7 +43,6 @@ class HtmlHelper
                                 <div class=\"col-5\">
                                     <a class=\"btn btn-danger\" href=\"logout.php\">Выйти</a>
                                     <a class=\"btn btn-success\" href=\"upload.php\">Загрузить файл</a>
-                                    <a class=\"btn btn-primary\" href=\"createdir.php\">Создать папку</a>
                                 </div>
                             </div>
                         ";

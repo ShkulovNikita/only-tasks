@@ -5,6 +5,7 @@
 require 'vendor/autoload.php';
 
 use AppClasses\{User, HtmlHelper, Application};
+use Controllers\AuthorizationController;
 
 echo HtmlHelper::showProlog('Авторизация');
 ?>
@@ -12,12 +13,7 @@ echo HtmlHelper::showProlog('Авторизация');
 <body>
 <?php
 $tokenLink = Application::GetAppTokenLink();
-/*
- * Если в форму было введено значение токена, то сохранить его. 
- */
-if (isset($_POST['token']) && !empty($_POST['token'])) {
-    User::authorizeUser($_POST['token']);
-}
+AuthorizationController::signin();
 ?>
 <form method="POST">
     <a href="<?=$tokenLink?>" target="_blank" class="btn btn-secondary yandex-button">Получить токен</a>

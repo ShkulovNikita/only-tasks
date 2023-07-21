@@ -4,19 +4,15 @@
 <?php
 require 'vendor/autoload.php';
 
-use AppClasses\{User, Drive, HtmlHelper};
+use AppClasses\HtmlHelper;
+use Controllers\FileController;
 
 echo HtmlHelper::showProlog('Загрузка файла');
 ?>
 </head>
 <body>
 <?php
-if (
-    $_FILES && $_FILES["filename"]["error"] == UPLOAD_ERR_OK 
-    || isset($_POST['fileurl']) && !empty($_POST['fileurl'])
-) {
-    Drive::uploadFile();
-}
+FileController::upload();
 ?>
 <div class="container-fluid">
     <div class="row">

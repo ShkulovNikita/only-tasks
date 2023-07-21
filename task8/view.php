@@ -4,19 +4,15 @@
 <?php
 require 'vendor/autoload.php';
 
-use AppClasses\{Drive, HtmlHelper, FileHelper};
+use AppClasses\{HtmlHelper, FileHelper};
+use Controllers\FileController;
 
 echo HtmlHelper::showProlog('Просмотр файла');
 ?>
 </head>
 <body>
 <?php
-$file;
-if (isset($_GET['name'])) {
-    $file = Drive::viewFile(htmlspecialchars($_GET['name']));
-} else {
-    $file = Drive::viewFile(htmlspecialchars(''));
-}
+$file = FileController::view();
 ?>
 
 <div class="container-fluid">

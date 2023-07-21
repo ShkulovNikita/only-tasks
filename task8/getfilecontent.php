@@ -1,15 +1,7 @@
 <?php
 
-namespace AppClasses;
+require 'vendor/autoload.php';
 
-require "$_SERVER[DOCUMENT_ROOT]/vendor/autoload.php";
+use Controllers\FileController;
 
-if (isset($_POST['filename'])) {
-    $noErrors = true;
-    $fileContent = TextEditor::getTextFileContent(htmlspecialchars($_POST['filename']), $noErrors);
-    if ($noErrors === false) {
-        echo 'Ошибка: ' . $fileContent;
-    } else {
-        echo $fileContent;
-    }
-}
+echo FileController::getFileContent();

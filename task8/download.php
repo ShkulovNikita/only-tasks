@@ -2,8 +2,6 @@
 
 require 'vendor/autoload.php';
 
-use AppClasses\Drive;
+use Controllers\FileController;
 
-if (isset($_POST['download'])) {
-    Drive::downloadFile(htmlspecialchars($_POST['download']));
-}
+FileController::download();

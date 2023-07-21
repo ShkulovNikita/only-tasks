@@ -4,28 +4,15 @@
 <?php
 require 'vendor/autoload.php';
 
-use AppClasses\{Drive, HtmlHelper, FileHelper, TextEditor};
+use AppClasses\{HtmlHelper, FileHelper};
+use Controllers\FileController;
 
 echo HtmlHelper::showProlog('Просмотр файла');
 ?>
 </head>
 <body>
-<?php 
-$file;
-if (isset($_GET['name'])) {
-    $file = Drive::viewFile(htmlspecialchars($_GET['name']));
-} else {
-    $file = Drive::viewFile(htmlspecialchars(''));
-}
-
-if (isset($_POST['edit']) && ($file != '')) {
-    Drive::editProperties($file);
-}
-
-if (isset($_POST['edit_content']) && isset($_POST['edit_file_text']) && ($file != '')) {
-    TextEditor::writeTextFileContent($file->name, $_POST['edit_file_text']);
-}
-
+<?php
+$file = FileController::edit();
 ?>
 <div class="container-fluid">
     <?=HtmlHelper::showHeader();?>

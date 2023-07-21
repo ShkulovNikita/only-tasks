@@ -2,11 +2,6 @@
 
 require 'vendor/autoload.php';
 
-use AppClasses\Drive;
+use Controllers\FileController;
 
-if (isset($_POST['fileForDelete'])) {
-    Drive::deleteFile(htmlspecialchars($_POST['fileForDelete']));
-}
-
-header("Location: " . "index.php");
-die();
+FileController::delete();
