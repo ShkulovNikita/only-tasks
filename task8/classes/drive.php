@@ -68,22 +68,7 @@ class Drive
         /*
          * Загрузить файл на Диск. 
          */
-        try {
-            if (!empty($filePath)) {
-                $resource = self::getResource($subdir . $fileName);
-                $resource->upload($filePath, true, true);
-
-                if ($sourceType === 'file') {
-                    /*
-                     * Удалить файл после загрузки.
-                     */
-                    unlink($filePath);
-                }
-            }
-        } catch (\Exception $ex) {
-            Session::setValue('error', 'Ошибка: ' . $ex);
-            return false;
-        }
+        self::uploadFileToYandex($filePath, $fileName, $sourceType, $subdir);
 
         return true;
     }
@@ -256,6 +241,40 @@ class Drive
         } catch (\Exception $ex) {
             Session::setValue('error', 'Ошибка: ' . $ex);
             return false;
+        }
+    }
+
+    /**
+     * Загрузить файл с хранилища на сервере на Яндекс.Диск.
+     * @param string $filePath Место хранения файла на сервере.
+     * @param string $fileName Имя файла.
+     * @param string $sourceType Тип загрузки файла, 'file' либо 'url'.
+     * @param string $subdir Подпапка внутри папки приложения.
+     */
+    public static function uploadFileToYandex($filePath, $fileName, $sourceType, $subdir = '')
+    {
+        print_r($filePath);
+        echo "<br>";
+        print_r($fileName);
+        echo "<br>";
+        print_r($sourceType);
+        echo "<br>";
+
+        try {
+            if (!empty($filePath)) {
+                $resource = self::getResource($subdir . $fileName);
+                $resource->upload($filePath, true, true);
+
+                if ($sourceType === 'file') {
+                    /*
+                     * Удалить файл после загрузки.
+                     */
+                    unlink($filePath);
+                }
+            }
+        } catch (\Exception $ex) {
+            Session::setValue('error', 'Ошибка: ' . $ex);
+            return;
         }
     }
 

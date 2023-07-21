@@ -37,7 +37,42 @@ class TextEditor
     }
 
     /**
-     * 
+     * Записать новый текст в файл.
+     * @param string $filename Имя файла.
+     * @param string $text Новый текст файла.
+     */
+    public static function writeTextFileContent($filename, $text)
+    {
+        /*
+         * Проверить, существует ли файл. 
+         */
+        $filePath = "$_SERVER[DOCUMENT_ROOT]/temp/edit/";
+        if (!file_exists($filePath . $filename)) {
+            Session::setValue('error', 'Ошибка: файл не найден.');
+            return;
+        }
+        /*
+         * Открыть файл и записать в него текст. 
+         */
+        try {
+            $file = fopen($filePath . $filename, 'w');
+            fwrite($file, $text);
+            fclose($file);
+        } catch (\Exception $ex) {
+            Session::setValue('error', 'Ошибка: ' . $ex);
+            return;
+        }
+        /*
+         * Загрузить обновленный файл на Яндекс.Диск. 
+         */
+        Drive::uploadFileToYandex($filePath . $filename, $filename, 'file');
+    }
+
+    /**
+     * Прочитать загруженный на сервер текстовый файл.
+     * @param string $filename Имя файла.
+     * @param bool $error Флаг успешности чтения файла.
+     * @return string Содержимое текстового файла.
      */
     private static function readTextFile($filename, &$error)
     {
@@ -53,11 +88,10 @@ class TextEditor
                 $error = false;
                 return 'Файл не найден на сервере.';
             }
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             $error = false;
             return 'Произошла ошибка при чтении файла.';
         }
     }
-
     
 }

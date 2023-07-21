@@ -4,7 +4,7 @@
 <?php
 require 'vendor/autoload.php';
 
-use AppClasses\{Drive, HtmlHelper, FileHelper};
+use AppClasses\{Drive, HtmlHelper, FileHelper, TextEditor};
 
 echo HtmlHelper::showProlog('Просмотр файла');
 ?>
@@ -21,6 +21,11 @@ if (isset($_GET['name'])) {
 if (isset($_POST['edit']) && ($file != '')) {
     Drive::editProperties($file);
 }
+
+if (isset($_POST['edit_content']) && isset($_POST['edit_file_text']) && ($file != '')) {
+    TextEditor::writeTextFileContent($file->name, $_POST['edit_file_text']);
+}
+
 ?>
 <div class="container-fluid">
     <?=HtmlHelper::showHeader();?>
@@ -83,11 +88,11 @@ if (isset($_POST['edit']) && ($file != '')) {
                         <?php
                         if (str_contains($file->mime_type, 'text/plain')) {
                             ?>
-                            <textarea class="form-control" rows="5" id="editor-field__file-text"></textarea>
+                            <textarea class="form-control" name="edit_file_text" rows="5" id="editor-field__file-text"></textarea>
                             <?php
                         }
                         ?>
-                        <input type="submit" id="edit-content-button" name="edit-content" class="btn btn-primary" value="Сохранить">
+                        <input type="submit" id="edit-content-button" name="edit_content" class="btn btn-primary" value="Сохранить">
                     </form>
                     <?php
                 }
@@ -154,30 +159,7 @@ $(document).ready(function() {
             type: 'POST',
             data: { "filename": filename },
             success: function(response) { 
-                /*
-                 * Проверить, возникли ли ошибки чтения файла. 
-                 */
-                const errorMessageLength = 8;
-                /*
-                 * Если полученный текст короче, чем "Ошибка: ", то
-                 * ошибок не было. 
-                 */
-                if (response.length < errorMessageLength) {
-                    setFileText(editorField, editorButton, response);
-                } else {
-                    /*
-                     * Получить первые 8 символов. 
-                     */
-                    let possibleErrorMess = response.slice(0, errorMessageLength);
-                    /*
-                     * Если есть ошибка, то оставить поле заблокированным. 
-                     */
-                    if (possibleErrorMess == 'Ошибка: ') {
-                        editorField.val(response);
-                    } else {
-                        setFileText(editorField, editorButton, response);
-                    }
-                }
+                processReadingFileResult(editorField, editorButton, response);
             },
             error: function() {
                 editorField.val('Произошла ошибка.');
@@ -192,6 +174,36 @@ $(document).ready(function() {
         editorField.val(text);
         editorField.prop('disabled', false);
         editorButton.prop('disabled', false);
+    }
+
+    /**
+     * Вывести результат чтения текстового файла.
+     */
+    function processReadingFileResult(editorField, editorButton, response) {
+        /*
+         * Проверить, возникли ли ошибки чтения файла. 
+         */
+        const errorMessageLength = 8;
+        /*
+         * Если полученный текст короче, чем "Ошибка: ", 
+         * то ошибок не было.
+         */
+        if (response.length < errorMessageLength) {
+            setFileText(editorField, editorButton, response);
+        } else {
+            /*
+             * Получить первые 8 символов. 
+             */
+            let possibleErrorMess = response.slice(0, errorMessageLength);
+            /*
+             * Если есть ошибка, то оставить поле заблокированным. 
+             */
+            if (possibleErrorMess == 'Ошибка: ') {
+                editorField.val(response);
+            } else {
+                setFileText(editorField, editorButton, response);
+            }
+        }
     }
 
     /**
