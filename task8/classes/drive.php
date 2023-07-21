@@ -27,7 +27,7 @@ class Drive
             } else {
                 return [];
             }
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             Session::setValue('error', 'Ошибка: ' . $ex);          
             return [];  
         }
@@ -80,7 +80,7 @@ class Drive
                     unlink($filePath);
                 }
             }
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             Session::setValue('error', 'Ошибка: ' . $ex);
             return false;
         }
@@ -103,15 +103,18 @@ class Drive
                  * Получить файл как ресурс.
                  */
                 $fileResource = self::getResource($subdir . $fileName);
-                /*
-                 * Проверить, существует ли он на Диске. 
-                 */
-                $exists = $fileResource->has();
+                $exists = false;
+                if ($fileResource) {
+                    /*
+                     * Проверить, существует ли он на Диске. 
+                     */
+                    $exists = $fileResource->has();
+                }
                 if ($exists) {
                     $fileResource->delete();
                 }
             }
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             Session::setValue('error', 'Ошибка: ' . $ex);
         }
     }
@@ -133,17 +136,20 @@ class Drive
              * Получить файл как ресурс.
              */
             $fileResource = self::getResource($subdir . $fileName);
-            /*
-             * Проверить, существует ли он на Диске. 
-             */
-            $exists = $fileResource->has();
+            $exists = false;
+            if ($fileResource) {
+                /*
+                 * Проверить, существует ли он на Диске. 
+                 */
+                $exists = $fileResource->has();
+            }
             if ($exists) {
                 return $fileResource;
             } else {
                 Session::setValue('error', 'Указанный файл не существует.');
                 return '';
             }
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             Session::setValue('error', 'Ошибка: ' . $ex);
             return '';
         }
@@ -164,13 +170,16 @@ class Drive
             /*
              * Проверить, существует ли он на Диске. 
              */
-            $exists = $fileResource->has();
+            $exists = false;
+            if ($fileResource) {
+                $exists = $fileResource->has();
+            }
             if ($exists) {
                 /*
                  * Сохранить файл в папку temp. 
                  */
                 $fileServerPath = "$_SERVER[DOCUMENT_ROOT]/temp/download/" . $fileName;
-                $fileTempDownloadResult = $fileResource->download($fileServerPath, true);
+                $fileTempDownloadResult = self::downloadFileToServer($fileResource, $fileServerPath);
                 /*
                  * Если файл был успешно загружен на сервер, то передать его пользователю. 
                  */
@@ -187,7 +196,7 @@ class Drive
                     unlink($fileServerPath);
                 }
             } 
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             Session::setValue('error', 'Ошибка: ' . $ex);
         }
     }
@@ -216,6 +225,23 @@ class Drive
          */
         if ($errors !== '') {
             Session::setValue('error', 'Ошибки:<br>' . $errors);
+        }
+    }
+
+    /**
+     * Сохранить файл с Яндекс.Диска в указанную папку сервера.
+     * @param Resource/Closed $file Файл как ресурс.
+     * @param string $serverPath Папка на сервере, в которую следует сохранить файл.
+     * @return bool true - удалось скачать файл, иначе false.
+     */
+    public static function downloadFileToServer($file, $serverPath)
+    {
+        try {
+            $fileDownloadResult = $file->download($serverPath, true);
+            return $fileDownloadResult;
+        } catch (\Exception $ex) {
+            Session::setValue('error', 'Ошибка: ' . $ex);
+            return false;
         }
     }
 
@@ -256,7 +282,7 @@ class Drive
              */
             try {
                 $file->set($propKey, $propValue);
-            } catch (Exception $ex) {
+            } catch (\Exception $ex) {
                 $errors .= '- ' . $ex . "<br>";
                 continue;
             }
@@ -301,7 +327,7 @@ class Drive
             if ($newValue == '') {
                 try {
                     $file->set($propKey, null);
-                } catch (Exception $ex) {
+                } catch (\Exception $ex) {
                     $errors .= '- ' . $ex . "\n";
                     continue;
                 }
@@ -312,7 +338,7 @@ class Drive
                  */
                 try {
                     $file->set($propKey, $newValue);
-                } catch (Exception $ex) {
+                } catch (\Exception $ex) {
                     $errors .= '- ' . $ex . "\n";
                     continue;
                 }
@@ -340,7 +366,10 @@ class Drive
         } catch (\Arhitector\Yandex\Client\Exception\UnauthorizedException $ex) {
             Session::setValue('error', 'Ошибка авторизации: ' . $ex);
             return false;
-        } catch (Exception $ex) {
+        } catch (\InvalidArgumentException $ex) {
+            Session::setValue('error', 'Ошибка: ' . $ex);
+            return false;
+        } catch (\Exception $ex) {
             Session::setValue('error', 'Ошибка: ' . $ex);          
             return false;  
         }
@@ -377,7 +406,7 @@ class Drive
             move_uploaded_file($_FILES["filename"]["tmp_name"], $path);
 
             $filePath = "$_SERVER[DOCUMENT_ROOT]/" . $path;
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             Session::setValue('error', 'Ошибка: ' . $ex);
             $filePath = '';      
         }

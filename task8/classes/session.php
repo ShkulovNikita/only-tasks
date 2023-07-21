@@ -54,7 +54,7 @@ class Session
             if (!isset($_SESSION)) {
                 session_start();
             }
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             echo "Ошибка сессии: " . $ex->getMessage();
         }
     }
