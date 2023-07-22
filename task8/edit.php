@@ -50,16 +50,14 @@ $file = FileController::edit();
                             }
                         }
                         ?>
-                        <label for="newPropertyKey[0]">Ключ</label>
-                        <input type="text" name="newPropertyKey[0]" value="">
-                        <label for="newPropertyValue[0]">Значение</label>
-                        <input type="text" name="newPropertyValue[0]" value="">
-                        <br>
-                        <label for="newPropertyKey[1]">Ключ</label>
-                        <input type="text" name="newPropertyKey[1]" value="">
-                        <label for="newPropertyValue[1]">Значение</label>
-                        <input type="text" name="newPropertyValue[1]" value="">
-                        <br>
+                        <div id="properties-fields">
+                            <label for="newPropertyKey[0]">Ключ</label>
+                            <input type="text" name="newPropertyKey[0]" value="">
+                            <label for="newPropertyValue[0]">Значение</label>
+                            <input type="text" name="newPropertyValue[0]" value="">
+                            <br>
+                        </div>
+                        <button type="button" id="add-property-field" class="btn btn-primary">Добавить поле</button>
                         <input type="submit" name="edit" class="btn btn-primary" value="Сохранить">
                     </form>
                 <?php
@@ -90,10 +88,47 @@ $file = FileController::edit();
 <script>
 $(document).ready(function() {
     /*
+     * Текущее количество полей для ввода метаинформации. 
+     */
+    let propFieldsNum = 1;
+
+    /*
      * Скрыть поля для редактирования файла. 
      */
     hideEditorField();
     hideFormProperties();
+
+    /**
+     * Добавление новых полей для ввода метаинформации.
+     */
+    $('#add-property-field').button().click(function () {
+        /*
+         * Создать элементы формы. 
+         */
+        var propertyKeyName = "newPropertyKey[" + propFieldsNum + "]";
+        var propertyValueName = "newPropertyValue[" + propFieldsNum + "]";
+        var keyLabel = $("<label></label>")
+                        .attr("for", propertyKeyName)
+                        .text("Ключ");
+        var keyField = $("<input>")
+                        .attr("type", "text")
+                        .attr("name", propertyKeyName)
+                        .val("");
+        var valueLabel = $("<label></label>")
+                        .attr("for", propertyValueName)
+                        .text("Значение");
+        var valueField = $("<input>")
+                        .attr("type", "text")
+                        .attr("name", propertyValueName)
+                        .val("");
+        var brEl = $("<br>");
+        $('#properties-fields').append(keyLabel)
+                               .append(keyField)
+                               .append(valueLabel)
+                               .append(valueField)
+                               .append(brEl);
+        propFieldsNum++;
+    });
 
     /**
      * Нажатие на кнопку "Редактирование метаинформации".
