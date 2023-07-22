@@ -24,7 +24,7 @@ $file = FileController::view();
             <!-- Изображение для файла. -->
             <div class="col-6" class="file-image">
                 <?php
-                if (isset($file['sizes'])) {
+                if ($file->has('sizes')) {
                     foreach ($file['sizes'] as $fileSize) {
                         if ($fileSize['name'] == 'XL') { 
                             ?>

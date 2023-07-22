@@ -48,7 +48,7 @@ $files = FileController::index();
             foreach ($files as $file) { ?>
                 <div class="col-3 file_item">
                     <?php 
-                    if (isset($file['preview'])) { 
+                    if ($file->has('preview')) { 
                         ?>
                         <img src="<?=$file['preview']?>" class="file-list__preview-image">
                         <?php 
