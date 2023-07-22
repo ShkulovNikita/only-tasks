@@ -131,8 +131,12 @@ class FileController
         /*
          * Проверить, что файл существует на Диске после загрузки. 
          */
-        if (!empty($filename) && Drive::getFile($filename)) {
-            Session::setValue('message', '<a href="view.php?name=' . $filename . '">Файл</a> успешно загружен.');
+        if (
+            !empty($filename) 
+            && Drive::getFile($filename)
+            && Session::getValue('error') === ''
+        ) {
+            Session::setValue('message', '<a href="view.php?name=' . $filename . '">Ссылка на файл.</a>');
         }
     }
 

@@ -17,7 +17,15 @@ class Drive
     public static function getFiles($subdir = '')
     {
         try {
-            $appFolderResource = self::getResource($subdir);
+            /**
+             * Получить лимит и смещение файлов.
+             */
+            $pageLimit = PageNavigator::getPageLimit();
+            $pageOffset = PageNavigator::getOffset();
+            /*
+             * Получить файлы с указанными лимитом и смещением. 
+             */
+            $appFolderResource = self::getResource($subdir, $pageLimit, $pageOffset);
             if ($appFolderResource !== false) {
                 /*
                  * Коллекция файлов в папке. 
@@ -276,7 +284,7 @@ class Drive
         try {
             if (!empty($filePath)) {
                 $resource = self::getResource($subdir . $fileName);
-                $resource->upload($filePath, true, true);
+                $resource->upload($filePath, true, false);
 
                 if ($sourceType === 'file') {
                     /*
@@ -415,9 +423,11 @@ class Drive
     /**
      * Получить ресурс по указанному пути.
      * @param string $subResource Подпапка внутри папки приложения либо файл.
+     * @param int $limit Количество получаемых с Диска файлов в запросе.
+     * @param int $offset Смещение в запросе.
      * @return object|bool Ресурс на Яндекс.Диске либо false.
      */
-    private static function getResource($subResource = '')
+    private static function getResource($subResource = '', $limit = 20, $offset = 0)
     {
         try {
             /*
@@ -427,7 +437,7 @@ class Drive
             /*
              * Получить указанную папку как ресурс.
              */
-            $appResource = $disk->getResource('app:/' . $subResource);
+            $appResource = $disk->getResource('app:/' . $subResource, $limit, $offset);
             return $appResource;
         } catch (\Arhitector\Yandex\Client\Exception\UnauthorizedException $ex) {
             Session::setValue('error', 'Ошибка авторизации: ' . $ex);
