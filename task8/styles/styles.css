@@ -99,7 +99,7 @@ body {
 .wide-errors {
     margin-left: 3vw;
     margin-right: 3vw;
-    margin-top: 0.5vh;
+    margin-top: 1vh;
 }
 
 /* Список файлов. */
@@ -233,4 +233,17 @@ body {
 
 .authorization__title {
     text-align: center;
+}
+
+.authorization-form {
+    margin: 0 auto;
+    width: 20vw;
+}
+
+.authorization-form__token-button {
+    margin-top: 1.5vh;
+}
+
+.authorization-form__submit {
+    margin-top: 2vh;
 }

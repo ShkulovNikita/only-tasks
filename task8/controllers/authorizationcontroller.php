@@ -26,6 +26,7 @@ class AuthorizationController
                 Router::routeToPage('index.php');
             } else {
                 Session::setValue('error', $signinResult);
+                User::logout();
             }
         }
     }
