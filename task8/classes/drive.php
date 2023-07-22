@@ -142,6 +142,22 @@ class Drive
     }
 
     /**
+     * Получить файл как ресурс.
+     * @param string $fileName Имя файла.
+     * @param string $subdir Подпапка внутри папки приложения.
+     * return Resource/Closed|bool Файл как ресурс либо false.
+     */
+    public static function getFile($fileName, $subdir = '')
+    {
+        $fileResource = self::getResource($subdir . $fileName);
+        if ($fileResource) {
+            return $fileResource;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Скачивание файла из Яндекс.Диска.
      * @param string $fileName Имя файла на Диске.
      * @param string $subdir Подпапка внутри папки приложения.

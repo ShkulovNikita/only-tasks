@@ -15,12 +15,12 @@ echo HtmlHelper::showProlog('Загрузка файла');
 FileController::upload();
 ?>
 <div class="container-fluid">
+    <?=HtmlHelper::showHeader()?>
     <div class="row">
         <div class="col-md-6">
             <?=HtmlHelper::showMessage();?>
         </div>
     </div>
-    <?=HtmlHelper::showHeader()?>
     <button id="chooseFileButton" class="btn btn-primary" disabled="disabled">Выбрать файл</button>
     <button id="useUrlButton" class="btn btn-primary">По ссылке</button>
     <form method="POST" enctype="multipart/form-data">

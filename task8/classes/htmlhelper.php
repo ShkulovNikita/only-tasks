@@ -76,18 +76,32 @@ class HtmlHelper
     }
 
     /**
-     * Сформировать HTML для вывода сообщений и ошибок.
+     * Вывод сообщений и ошибок.
      * @return string HTML-разметка панели с сообщением.
      */
     public static function showMessage()
     {
         $errorMessage = Session::getValue('error');
-        if (!empty($errorMessage)) {
-            $html = '';
-            $html .= '<div class="card bg-danger text-white">' . "\n";
-            $html .= '<div class="card-header">' . $errorMessage . '</div>' . "\n";
-            $html .= '</div>' . "\n";
-            Session::deleteValue('error');
+        $resultHtml = self::getMessageHtml('error', $errorMessage);
+        Session::deleteValue('error');
+
+        $infoMessage = Session::getValue('message');
+        $resultHtml .= self::getMessageHtml('info', $infoMessage);
+        Session::deleteValue('message');
+        
+        return $resultHtml;
+    }
+
+    /**
+     * Сформировать HTML-разметку для сообщения.
+     * @param string $type Тип сообщения (error либо info).
+     * @param string $text Текст сообщения.
+     * @return string HTML для вывода сообщения.
+     */
+    private static function getMessageHtml($type, $text)
+    {
+        if (!empty($text)) {
+            $html = '<div class="message message_' . $type . '">' . $text . '</div>' . "\n";
             return $html;
         } else {
             return '';

@@ -131,8 +131,8 @@ class FileController
         /*
          * Проверить, что файл существует на Диске после загрузки. 
          */
-        if (!empty($filename) && Drive::viewFile($filename) != '') {
-            Router::routeToPage('view.php?name=' . $filename);
+        if (!empty($filename) && Drive::getFile($filename)) {
+            Session::setValue('message', '<a href="view.php?name=' . $filename . '">Файл</a> успешно загружен.');
         }
     }
 
