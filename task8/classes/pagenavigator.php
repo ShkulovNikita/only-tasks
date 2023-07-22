@@ -9,7 +9,7 @@ class PageNavigator {
     /**
      * Количество файлов, получаемых при запросе для страницы.
      */
-    private const PAGE_LIMIT = 20;
+    private const PAGE_LIMIT = 12;
 
     /**
      * Получить смещение для запроса на получение файлов.

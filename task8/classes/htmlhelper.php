@@ -39,10 +39,12 @@ class HtmlHelper
         $toolbar = '';
         if (User::isAuthorized() === true) {
             $toolbar .= "
-                            <div class=\"row\">
-                                <div class=\"col-5\">
-                                    <a class=\"btn btn-danger\" href=\"logout.php\">Выйти</a>
-                                    <a class=\"btn btn-success\" href=\"upload.php\">Загрузить файл</a>
+                            <div class=\"row justify-content-between toolbar\">
+                                <div class=\"col-2 toolbar__button-container\">
+                                    <a class=\"btn btn-secondary button_yellow\" href=\"upload.php\">Загрузить файл</a>
+                                </div>
+                                <div class=\"col-2 toolbar__button-container\">
+                                    <a class=\"btn btn-danger toolbar__error-button\" href=\"logout.php\">Выйти</a>
                                 </div>
                             </div>
                         ";
@@ -51,7 +53,9 @@ class HtmlHelper
                     <div class=\"row\">
                         <div class=\"col-12\">
                             <a href=\"index.php\" class=\"header header__title\">
-                                <h1>Задание 8</h1>
+                                <div class=\"header__text\">
+                                    <h1>Задание 8</h1>
+                                </div>
                             </a>
                         </div>
                     </div>
