@@ -180,8 +180,12 @@ body {
 
 /* Превью на странице просмотра. */
 .file-image__image {
+    /* width: 95%; */
+    /* max-height: 75%; */
+
     width: 95%;
-    max-height: 75%;
+    height: 75%;
+    object-fit: contain;
 }
 
 /* Кнопка с оформлением Яндекса. */
@@ -258,4 +262,30 @@ body {
 .upload__form {
     width: 30em;
     margin: 0 auto;
+}
+
+/* Просмотр информации о файле. */
+
+.view-content__buttons-menu {
+    margin-top: 2vh;
+}
+
+.view-content__edit-button {
+    float: left;
+    margin-right: 2vw;
+}
+
+.view-content__download-button {
+    float: left;
+    margin-right: 2vw;
+}
+
+.view-content__delete-button {
+    float: right;
+    margin-right: 2vw;
+}
+
+.view-content__file-info {
+    clear: both;
+    margin-top: 9vh;
 }
