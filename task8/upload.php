@@ -16,21 +16,34 @@ FileController::upload();
 ?>
 <div class="container-fluid">
     <?=HtmlHelper::showHeader()?>
-    <div class="row">
-        <div class="col-md-6">
-            <?=HtmlHelper::showMessage();?>
+    <div class="row wide-errors">
+        <?=HtmlHelper::showMessage();?>
+    </div>
+    <div class="row main-content upload">
+        <div class="col-12">
+            <h3 class="text-center">Загрузка файла</h3>
+        </div>
+        <div class="col-12">
+            <div class="upload__menu">
+                <button id="chooseFileButton" class="btn btn-secondary button_yellow" disabled="disabled">Выбрать файл</button>
+                <button id="useUrlButton" class="btn btn-secondary button_yellow">По ссылке</button>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="upload__form">
+                <form method="POST" enctype="multipart/form-data">
+                    <label id="filenameLabel" for="filename">Файл для загрузки</label>
+                    <input id="fileUploadInput" type="file" name="filename" size="10" class="form-control">
+                    <label id="fileUrlLabel" for="fileurl">Введите URL</label>
+                    <input id="fileUrlInput" type="url" name="fileurl" class="form-control"><br />
+                    <input type="hidden" id="uploadType" name="type" value="file">
+                    <div class="text-center">
+                        <input type="submit" class="btn btn-secondary button_yellow" value="Отправить">
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-    <button id="chooseFileButton" class="btn btn-primary" disabled="disabled">Выбрать файл</button>
-    <button id="useUrlButton" class="btn btn-primary">По ссылке</button>
-    <form method="POST" enctype="multipart/form-data">
-        <label id="filenameLabel" for="filename">Выберите файл</label>
-        <input id="fileUploadInput" type="file" name="filename" size="10">
-        <label id="fileUrlLabel" for="fileurl">Введите URL</label>
-        <input id="fileUrlInput" type="url" name="fileurl"><br />
-        <input type="hidden" id="uploadType" name="type" value="file">
-        <input type="submit" class="btn btn-primary" value="Отправить">
-    </form>
     <?=HtmlHelper::showFooter()?>
 </div>
 <script>

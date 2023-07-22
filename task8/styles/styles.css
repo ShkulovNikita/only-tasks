@@ -247,3 +247,15 @@ body {
 .authorization-form__submit {
     margin-top: 2vh;
 }
+
+/* Загрузка файлов. */
+
+.upload__menu {
+    width: 15em;
+    margin: 0 auto;
+}
+
+.upload__form {
+    width: 30em;
+    margin: 0 auto;
+}

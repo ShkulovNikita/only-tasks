@@ -30,8 +30,8 @@ AuthorizationController::signin();
                     <div class="text-center authorization-form__token-button">
                         <a href="<?=$tokenLink?>" target="_blank" class="btn btn-secondary yandex-button">Получить токен</a>
                     </div>
+                    <label for="token">Введите токен:</label>
                     <div class="text-center">
-                        <label for="token">Введите токен:</label>
                         <input type="text" name="token" value="<?=User::getToken()?>" class="form-control"/>
                         <input type="submit" class="btn btn-secondary button_yellow authorization-form__submit" value="Войти"/>
                     </div>
@@ -39,6 +39,7 @@ AuthorizationController::signin();
             </div>
         </div>
     </div>
+    <?=HtmlHelper::showFooter()?>
 </div>
 </body>
 </html>
