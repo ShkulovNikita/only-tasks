@@ -7,7 +7,7 @@ require 'vendor/autoload.php';
 use AppClasses\{HtmlHelper, FileHelper};
 use Controllers\FileController;
 
-echo HtmlHelper::showProlog('Просмотр файла');
+echo HtmlHelper::showProlog('Редактирование файла');
 ?>
 </head>
 <body>
@@ -18,24 +18,32 @@ $propFieldsNum = 0;
 ?>
 <div class="container-fluid">
     <?=HtmlHelper::showHeader();?>
-    <div class="row">
-        <div class="col-6">
-            <?=HtmlHelper::showMessage('error');?>
-            <?php
-            if ($file != '') {
-                ?>
-                    <h3><?=$file['name']?></h3>
-                    <button id="edit-properties" class="btn btn-primary">Редактировать метаинформацию</button>
+    <div class="row wide-errors">
+        <?=HtmlHelper::showMessage();?>
+    </div>
+    <?php
+    if ($file != '') {
+    ?>
+        <div class="row main-content edit-content">
+            <div class="col-12">
+                <h3><?=$file['name']?></h3>
+                <div class="edit-content__buttons-menu">
+                    <a href="view.php?name=<?=$file['name']?>" class="btn btn-secondary button_yellow">Назад</a>
+                    <button id="edit-properties" class="btn btn-secondary button_yellow">Редактировать метаинформацию</button>
                     <?php
                         /*
                          * Если файл текстовый, то его можно отредактировать.
                          */
                         if (str_contains($file->mime_type, 'text/plain')) {
                             ?>
-                            <button id="edit-text-file" class="btn btn-primary">Редактировать файл</button>
+                            <button id="edit-text-file" class="btn btn-secondary button_yellow">Редактировать файл</button>
                             <?php
                         }
                     ?>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="edit-content__properties">
                     <form method="POST" id="properties-form">
                         <?php
                         /*
@@ -46,7 +54,7 @@ $propFieldsNum = 0;
                             foreach ($properties as $propertyKey => $propertyValue) {
                                 ?>
                                 <label for="<?=$propertyKey?>"><?=$propertyKey?></label>
-                                <input type="text" name="<?=$propertyKey?>" value="<?=$propertyValue?>">
+                                <input type="text" class="form-control edit-content_input" name="<?=$propertyKey?>" value="<?=$propertyValue?>">
                                 <br>
                                 <?php
                             }
@@ -61,9 +69,9 @@ $propFieldsNum = 0;
                                 foreach ($incorrectProps as $propertyKey => $propertyValue) {
                                     ?>
                                     <label for="newPropertyKey[<?=$propFieldsNum?>]">Ключ</label>
-                                    <input type="text" name="newPropertyKey[<?=$propFieldsNum?>]" value="<?=$propertyKey?>">
+                                    <input type="text" class="form-control edit-content_input" name="newPropertyKey[<?=$propFieldsNum?>]" value="<?=$propertyKey?>">
                                     <label for="newPropertyValue[<?=$propFieldsNum?>]">Значение</label>
-                                    <input type="text" name="newPropertyValue[<?=$propFieldsNum?>]" value="<?=$propertyValue?>">
+                                    <input type="text" class="form-control edit-content_input" name="newPropertyValue[<?=$propFieldsNum?>]" value="<?=$propertyValue?>">
                                     <br>
                                     <?php
                                     $propFieldsNum++;
@@ -72,41 +80,48 @@ $propFieldsNum = 0;
                             ?>
                             <!-- Вывести дополнительно одну пару пустых полей. -->
                             <label for="newPropertyKey[<?=$propFieldsNum?>]">Ключ</label>
-                            <input type="text" name="newPropertyKey[<?=$propFieldsNum?>]" value="">
+                            <input type="text" class="form-control edit-content_input" name="newPropertyKey[<?=$propFieldsNum?>]" value="">
                             <label for="newPropertyValue[<?=$propFieldsNum?>]">Значение</label>
-                            <input type="text" name="newPropertyValue[<?=$propFieldsNum?>]" value="">
+                            <input type="text" class="form-control edit-content_input" name="newPropertyValue[<?=$propFieldsNum?>]" value="">
                             <br>
                             <?php
                             $propFieldsNum++;
                             ?>
                         </div>
-                        <button type="button" id="add-property-field" class="btn btn-primary">Добавить поле</button>
-                        <input type="submit" name="edit" class="btn btn-primary" value="Сохранить">
+                        <button type="button" id="add-property-field" class="btn btn-secondary button_yellow">Добавить поле</button>
+                        <input type="submit" name="edit" class="btn btn-secondary button_yellow" value="Сохранить">
                     </form>
+                </div>
+            </div>
+            <!-- Часть страницы с редактором. -->
+            <div class="col-6" id="editor-field">
                 <?php
-            }
-            ?>
-        </div>
-        <div class="col-6" id="editor-field">
-            <?php
-                if ($file != '') {
-                    ?>
-                    <form method="POST">
-                        <input type="hidden" id="current-file-name" value="<?=$file->name?>">
-                        <?php
-                        if (str_contains($file->mime_type, 'text/plain')) {
-                            ?>
-                            <textarea class="form-control" name="edit_file_text" rows="5" id="editor-field__file-text"></textarea>
-                            <?php
-                        }
+                    if ($file != '') {
                         ?>
-                        <input type="submit" id="edit-content-button" name="edit_content" class="btn btn-primary" value="Сохранить">
-                    </form>
-                    <?php
-                }
-            ?>
+                        <div class="edit-content__text-editor">
+                            <form method="POST">
+                                <input type="hidden" id="current-file-name" value="<?=$file->name?>">
+                                <?php
+                                if (str_contains($file->mime_type, 'text/plain')) {
+                                    ?>
+                                    <label for="edit_file_text">Текст файла</label>
+                                    <textarea class="form-control" name="edit_file_text" rows="5" id="editor-field__file-text"></textarea>
+                                    <?php
+                                }
+                                ?>
+                                <input type="submit" id="edit-content-button" name="edit_content" class="btn btn-secondary button_yellow edit-content__editor-button" value="Сохранить">
+                            </form>
+                        </div>
+                        <?php
+                    }
+                ?>
+            </div>
         </div>
+    <?php
+    }
+    ?>
     </div>
+    <?=HtmlHelper::showFooter();?>
 </div>
 <script>
 $(document).ready(function() {
@@ -140,6 +155,8 @@ $(document).ready(function() {
         var keyField = $("<input>")
                         .attr("type", "text")
                         .attr("name", propertyKeyName)
+                        .addClass('form-control')
+                        .addClass('edit-content_input')
                         .val("");
         var valueLabel = $("<label></label>")
                         .attr("for", propertyValueName)
@@ -147,6 +164,8 @@ $(document).ready(function() {
         var valueField = $("<input>")
                         .attr("type", "text")
                         .attr("name", propertyValueName)
+                        .addClass('form-control')
+                        .addClass('edit-content_input')
                         .val("");
         var brEl = $("<br>");
         $('#properties-fields').append(keyLabel)

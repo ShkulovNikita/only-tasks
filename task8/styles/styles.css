@@ -289,3 +289,25 @@ body {
     clear: both;
     margin-top: 9vh;
 }
+
+/* Редактирование файла. */
+
+.edit-content__buttons-menu {
+    margin-top: 2vh;
+}
+
+.edit-content__properties {
+    margin-top: 2vh;
+}
+
+.edit-content_input {
+    width: 20vw;
+}
+
+.edit-content__text-editor {
+    margin-top: 2vh;
+}
+
+.edit-content__editor-button {
+    margin-top: 2vh;
+}
