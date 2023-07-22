@@ -190,6 +190,7 @@ class Drive
     /**
      * Добавить и отредактировать метаинформацию о файле.
      * @param Resource/Closed $file Файл как ресурс.
+     * @return array Массив свойств, которые не удалось добавить.
      */
     public static function editProperties($file)
     {
@@ -199,19 +200,21 @@ class Drive
         );
         $errors = '';
         /*
-         * Добавить новую метаинформацию.
-         */
-        self::addProperties($file, $newProperties, $errors);
-        /*
          * Отредактировать уже существующие свойства. 
          */
         self::editProps($file, $errors);
+        /*
+         * Добавить новую метаинформацию.
+         */
+        $incorrectProps = self::addProperties($file, $newProperties, $errors);
         /*
          * Отобразить ошибки, если есть. 
          */
         if ($errors !== '') {
             Session::setValue('error', 'Ошибки:<br>' . $errors);
         }
+
+        return $incorrectProps;
     }
 
     /**
@@ -280,9 +283,11 @@ class Drive
      * представляющие собой добавляемую к файлу метаинформацию.
      * @param string $errors Переменная, в которую записываются ошибки,
      * возникшие в процессе работы метода.
+     * @return array Массив пар ключ-значение, которые не были добавлены.
      */
     private static function addProperties($file, $properties, &$errors)
     {
+        $incorrectProps = [];
         foreach ($properties as $propKey => $propValue) {
             $propKey = htmlspecialchars($propKey);
             $propValue = htmlspecialchars($propValue);
@@ -297,11 +302,13 @@ class Drive
              * то данное значение игнорируется с выводом ошибки. 
              */
             if ($propKey == '') {
-                $errors .= "- Пустое значение ключа.<br>";
+                $errors .= "- Пустой ключ для значения $propValue.<br>";
+                $incorrectProps[$propKey] = $propValue;
                 continue;
             }
             if ($propValue == '') {
-                $errors .= "- Пустое значение свойства.<br>";
+                $errors .= "- Пустое значение свойства для ключа $propKey.<br>";
+                $incorrectProps[$propKey] = $propValue;
                 continue;
             }
             /*
@@ -311,9 +318,14 @@ class Drive
                 $file->set($propKey, $propValue);
             } catch (\Exception $ex) {
                 $errors .= '- ' . $ex . "<br>";
+                $incorrectProps[$propKey] = $propValue;
                 continue;
             }
         }
+        /*
+         * Вернуть те пары ключ-значение, которые не удалось добавить. 
+         */
+        return $incorrectProps;
     }
 
     /**
@@ -339,9 +351,10 @@ class Drive
          */
         foreach ($fileProps as $propKey => $propValue) {
             /*
-             * Игнорировать значения, которые не были переданы. 
+             * Удалить свойства для значений, которые не были переданы (пустые).
              */
             if (!isset($_POST[$propKey])) {
+                self::clearProperty($file, $propKey, $errors);
                 continue;
             }
             /*
@@ -352,12 +365,7 @@ class Drive
              * Если новое значение пустое, то удалить свойство. 
              */
             if ($newValue == '') {
-                try {
-                    $file->set($propKey, null);
-                } catch (\Exception $ex) {
-                    $errors .= '- ' . $ex . "\n";
-                    continue;
-                }
+                self::clearProperty($file, $propKey, $errors);
             } elseif ($newValue != $propValue) {
                 /*
                  * Если старое и новое значения не совпадают,
@@ -370,6 +378,21 @@ class Drive
                     continue;
                 }
             }
+        }
+    }
+
+    /**
+     * Удалить свойство метаинформации файла.
+     * @param Resource/Closed $file Файл как ресурс.
+     * @param string $propKey Ключ удаляемого свойства.
+     * @param string $errors Список ошибок.
+     */
+    private static function clearProperty($file, $propKey, &$errors)
+    {
+        try {
+            $file->set($propKey, null);
+        } catch (\Exception $ex) {
+            $errors .= '- ' . $ex . "\n";
         }
     }
 

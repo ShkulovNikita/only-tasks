@@ -46,9 +46,10 @@ class FileController
 
     /**
      * Редактирование файла.
+     * @param array $incorrectProps Массив свойств, которые не удалось добавить.
      * @return Arhitector\Yandex\Disk\Resource\Closed|string Файл как ресурс либо пустая строка.
      */
-    public static function edit()
+    public static function edit(&$incorrectProps)
     {
         /*
          * Проверить авторизацию пользователя.
@@ -61,7 +62,7 @@ class FileController
         /*
          * Сохранить изменения метаинформации. 
          */
-        FileController::editProperties($file);
+        $incorrectProps = FileController::editProperties($file);
         /*
          * Сохранить изменения содержимого файла. 
          */
@@ -179,6 +180,7 @@ class FileController
     /**
      * Редактирование метаинформации файла.
      * @param Arhitector\Yandex\Disk\Resource\Closed|string $file Файл как ресурс либо пустая строка.
+     * @return array Массив свойств, которые не удалось добавить.
      */
     private static function editProperties($file)
     {
@@ -186,7 +188,10 @@ class FileController
          * Выполняется, если была нажата кнопка редактирования метаинформации.
          */
         if (isset($_POST['edit']) && ($file != '')) {
-            Drive::editProperties($file);
+            $incorrectProps = Drive::editProperties($file);
+            return $incorrectProps;
+        } else {
+            return [];
         }
     }
 

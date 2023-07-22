@@ -12,7 +12,9 @@ echo HtmlHelper::showProlog('Просмотр файла');
 </head>
 <body>
 <?php
-$file = FileController::edit();
+$incorrectProps = [];
+$file = FileController::edit($incorrectProps);
+$propFieldsNum = 0;
 ?>
 <div class="container-fluid">
     <?=HtmlHelper::showHeader();?>
@@ -51,11 +53,32 @@ $file = FileController::edit();
                         }
                         ?>
                         <div id="properties-fields">
-                            <label for="newPropertyKey[0]">Ключ</label>
-                            <input type="text" name="newPropertyKey[0]" value="">
-                            <label for="newPropertyValue[0]">Значение</label>
-                            <input type="text" name="newPropertyValue[0]" value="">
+                            <?php
+                            /*
+                             * Вывести те значения свойств, которые не удалось добавить. 
+                             */
+                            if (count($incorrectProps) > 0) {
+                                foreach ($incorrectProps as $propertyKey => $propertyValue) {
+                                    ?>
+                                    <label for="newPropertyKey[<?=$propFieldsNum?>]">Ключ</label>
+                                    <input type="text" name="newPropertyKey[<?=$propFieldsNum?>]" value="<?=$propertyKey?>">
+                                    <label for="newPropertyValue[<?=$propFieldsNum?>]">Значение</label>
+                                    <input type="text" name="newPropertyValue[<?=$propFieldsNum?>]" value="<?=$propertyValue?>">
+                                    <br>
+                                    <?php
+                                    $propFieldsNum++;
+                                }
+                            }
+                            ?>
+                            <!-- Вывести дополнительно одну пару пустых полей. -->
+                            <label for="newPropertyKey[<?=$propFieldsNum?>]">Ключ</label>
+                            <input type="text" name="newPropertyKey[<?=$propFieldsNum?>]" value="">
+                            <label for="newPropertyValue[<?=$propFieldsNum?>]">Значение</label>
+                            <input type="text" name="newPropertyValue[<?=$propFieldsNum?>]" value="">
                             <br>
+                            <?php
+                            $propFieldsNum++;
+                            ?>
                         </div>
                         <button type="button" id="add-property-field" class="btn btn-primary">Добавить поле</button>
                         <input type="submit" name="edit" class="btn btn-primary" value="Сохранить">
@@ -90,13 +113,17 @@ $(document).ready(function() {
     /*
      * Текущее количество полей для ввода метаинформации. 
      */
-    let propFieldsNum = 1;
-
+    let propFieldsNum = '<?=$propFieldsNum?>';
     /*
      * Скрыть поля для редактирования файла. 
      */
     hideEditorField();
-    hideFormProperties();
+    /*
+     * Скрыть поля для метаинформации, если нет ошибок. 
+     */
+    if (!'<?=count($incorrectProps) > 0;?>') {
+        hideFormProperties();
+    }
 
     /**
      * Добавление новых полей для ввода метаинформации.
