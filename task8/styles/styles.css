@@ -300,6 +300,10 @@ body {
     margin-top: 2vh;
 }
 
+.edit-content__save-props-button {
+    margin-top: 2vh;
+}
+
 .edit-content_input {
     width: 20vw;
 }

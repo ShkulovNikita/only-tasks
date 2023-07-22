@@ -64,9 +64,18 @@ class FileController
          */
         $incorrectProps = FileController::editProperties($file);
         /*
+         * Получить все значения метаинформации файла. 
+         */
+        $fileProperties = $file->getProperties();
+        /*
          * Сохранить изменения содержимого файла. 
          */
         FileController::editFileContent($file);
+        /*
+         * Записать свойства в обновленный файл. 
+         */
+        $errors = '';
+        Drive::addProperties($file, $fileProperties, $errors);
 
         return $file;
     }

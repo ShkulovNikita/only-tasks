@@ -89,7 +89,9 @@ $propFieldsNum = 0;
                             ?>
                         </div>
                         <button type="button" id="add-property-field" class="btn btn-secondary button_yellow">Добавить поле</button>
-                        <input type="submit" name="edit" class="btn btn-secondary button_yellow" value="Сохранить">
+                        <div class="edit-content__save-props-button">
+                            <input type="submit" name="edit" class="btn btn-secondary button_yellow" value="Сохранить">
+                        </div>
                     </form>
                 </div>
             </div>

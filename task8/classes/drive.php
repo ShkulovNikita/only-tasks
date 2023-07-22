@@ -309,7 +309,7 @@ class Drive
      * возникшие в процессе работы метода.
      * @return array Массив пар ключ-значение, которые не были добавлены.
      */
-    private static function addProperties($file, $properties, &$errors)
+    public static function addProperties($file, $properties, &$errors)
     {
         $incorrectProps = [];
         foreach ($properties as $propKey => $propValue) {
