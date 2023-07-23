@@ -353,6 +353,22 @@ class Drive
     }
 
     /**
+     * Проверить размер загружаемого файла.
+     * @return bool true - корректный размер файла, false - слишком большой.
+     */
+    public static function checkFileSize()
+    {
+        if (
+            isset($_SERVER['CONTENT_LENGTH']) 
+            && (int) $_SERVER['CONTENT_LENGTH'] > Application::getFileLimit()
+        ) {
+            Session::setValue('error', 'Файл слишком большой.');
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Отредактировать метаинформацию файла.
      * @param Resource/Closed $file Файл как ресурс.
      * @param string $errors Переменная, в которую записываются ошибки,

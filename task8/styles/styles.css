@@ -264,6 +264,15 @@ body {
     margin: 0 auto;
 }
 
+.upload__error {
+    color: red;
+    text-align: center;
+}
+
+.hidden {
+    display: none;
+}
+
 /* Просмотр информации о файле. */
 
 .view-content__buttons-menu {

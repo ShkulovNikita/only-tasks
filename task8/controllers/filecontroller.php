@@ -131,6 +131,16 @@ class FileController
          * Загрузить файл, указанный пользователем, на Я.Диск. 
          */
         $filename;
+        /*
+         * Проверить размер файла. 
+         */
+        $isSizeCorrect = Drive::checkFileSize();
+        if ($isSizeCorrect === false) {
+            return;
+        }
+        /*
+         * Загрузить файл. 
+         */
         if (
             $_FILES && $_FILES["filename"]["error"] == UPLOAD_ERR_OK 
             || isset($_POST['fileurl']) && !empty($_POST['fileurl'])

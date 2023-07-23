@@ -4,7 +4,7 @@
 <?php
 require 'vendor/autoload.php';
 
-use AppClasses\HtmlHelper;
+use AppClasses\{HtmlHelper, Application};
 use Controllers\FileController;
 
 echo HtmlHelper::showProlog('Загрузка файла');
@@ -12,6 +12,10 @@ echo HtmlHelper::showProlog('Загрузка файла');
 </head>
 <body>
 <?php
+/*
+ * Максимальный размер загружаемого файла. 
+ */
+$fileLimit = Application::getFileLimit();
 FileController::upload();
 ?>
 <div class="container-fluid">
@@ -31,9 +35,10 @@ FileController::upload();
         </div>
         <div class="col-12">
             <div class="upload__form">
-                <form method="POST" enctype="multipart/form-data">
+                <form method="POST" id="upload-file" enctype="multipart/form-data">
                     <label id="filenameLabel" for="filename">Файл для загрузки</label>
                     <input id="fileUploadInput" type="file" name="filename" size="10" class="form-control">
+                    <p id="upload-file-error" class="upload__error hidden">Файл слишком большой.</p>
                     <label id="fileUrlLabel" for="fileurl">Введите URL</label>
                     <input id="fileUrlInput" type="url" name="fileurl" class="form-control"><br />
                     <input type="hidden" id="uploadType" name="type" value="file">
@@ -109,6 +114,33 @@ $(document).ready(function() {
     function showUrlInputs() {
         $('#fileUrlLabel').show();
         $('#fileUrlInput').show();
+    }
+
+    /**
+     * Проверка размера загружаемого файла.
+     */
+    $('#upload-file').on('change', function() {
+        let sizeLimit = '<?=$fileLimit?>';
+        if (this[0].files[0].size > sizeLimit) {
+            showFileError();
+            $(this[0]).val('');
+        } else {
+            hideFileError();
+        }
+    });
+
+    /**
+     * Показать сообщение, что выбранный файл слишком большой.
+     */
+    function showFileError() {
+        $('#upload-file-error').removeClass('hidden');
+    }
+
+    /**
+     * Скрыть сообщение о том, что выбранный файл слишком большой.
+     */
+    function hideFileError() {
+        $('#upload-file-error').addClass('hidden');
     }
 });
 </script>

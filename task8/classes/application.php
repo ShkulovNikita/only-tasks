@@ -63,4 +63,37 @@ class Application
     {
         return "$_SERVER[DOCUMENT_ROOT]/" . self::UPLOAD_PATH;
     }
+
+    /**
+     * Получить лимит размера для загружаемых файлов.
+     * @return int Лимит в байтах.
+     */
+    public static function getFileLimit()
+    {
+        return self::convertToBytes(ini_get('post_max_size'));
+    }
+
+    /**
+     * Конвертировать размер в строчном формате в байты.
+     * @param string $from Строка вида "10М", "8К" и т.д.
+     * @return int Размер в байтах.
+     */
+    private static function convertToBytes(string $from): ?int 
+    {
+        $bytes = 0;
+        $units = ['B', 'K', 'M', 'G'];
+        /*
+         * Найти букву, содержащуюся в размере. 
+         */
+        $multiplier = 1;
+        $lastChar = substr($from, -1);
+        foreach ($units as $key => $unit) {
+            if ($lastChar == $unit) {
+                return intval(substr($from, 0, -1)) * $multiplier;
+            }
+            $multiplier = $multiplier * 1024;
+        }
+
+        return $bytes;
+    }
 }
