@@ -95,6 +95,9 @@ class FileController
         if (isset($_POST['download'])) {
             Drive::downloadFile(htmlspecialchars($_POST['download']));
         }
+        if (Session::getValue('error') !== '') {
+            Router::routeToPage('index.php');
+        }
     }
 
     /**
@@ -111,6 +114,12 @@ class FileController
          */
         if (isset($_POST['fileForDelete'])) {
             Drive::deleteFile(htmlspecialchars($_POST['fileForDelete']));
+        }
+        /**
+         * Если нет ошибок, то вывести сообщение об успешности загрузки.
+         */
+        if (Session::getValue('error') === '') {
+            Session::setValue('message', 'Файл был успешно удален.');
         }
         /*
          * После удаления перенаправить пользователя на главную страницу.
@@ -212,6 +221,9 @@ class FileController
          */
         if (isset($_POST['edit']) && ($file != '')) {
             $incorrectProps = Drive::editProperties($file);
+            if (Session::getValue('error') === '') {
+                Session::setValue('message', 'Свойства были отредактированы.');
+            }
             return $incorrectProps;
         } else {
             return [];
@@ -233,6 +245,9 @@ class FileController
             && ($file != '')
         ) {
             TextEditor::writeTextFileContent($file->name, $_POST['edit_file_text']);
+            if (Session::getValue('error') === '') {
+                Session::setValue('message', 'Текст был отредактирован.');
+            }
         }
     }
 }

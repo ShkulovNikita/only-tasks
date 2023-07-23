@@ -183,6 +183,8 @@ class Drive
             $exists = false;
             if ($fileResource) {
                 $exists = $fileResource->has();
+            } else {
+                Session::setValue('error', 'Не удалось получить файл.');
             }
             if ($exists) {
                 /*
@@ -204,8 +206,12 @@ class Drive
                      * Удалить файл с сервера. 
                      */
                     unlink($fileServerPath);
+                } else {
+                    Session::setValue('error', 'Не удалось загрузить файл.');
                 }
-            } 
+            } else {
+                Session::setValue('error', 'Не удалось загрузить файл.');
+            }
         } catch (\Exception $ex) {
             Session::setValue('error', 'Ошибка: ' . $ex);
         }

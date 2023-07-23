@@ -56,7 +56,7 @@ class PageNavigator {
          * Если страница не полностью заполнена, то эта страница - последняя.
          * Иначе добавить следующую страницу.
          */
-        if (count($files) >= self::PAGE_LIMIT) {
+        if (count($files) > self::PAGE_LIMIT) {
             $navigator['next'] = $currentPage + 1;
         }
         /*

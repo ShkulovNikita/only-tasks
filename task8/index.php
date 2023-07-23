@@ -105,7 +105,13 @@ if ($files) {
                 <!-- Вывести кнопки постраничной навигации -->
                 <div class="col-12 page-navigation">
                     <form method="GET">
-                        <span>Страница:</span>
+                        <?php
+                        if (isset($pageNavigator['current'])) {
+                            ?>
+                            <span>Страница:</span>
+                            <?php
+                        }
+                        ?>
                         <?php
                         if (isset($pageNavigator['previous'])) {
                             ?>
