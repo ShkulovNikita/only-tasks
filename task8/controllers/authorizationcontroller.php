@@ -28,6 +28,8 @@ class AuthorizationController
                 Session::setValue('error', $signinResult);
                 User::logout();
             }
+        } elseif (isset($_POST['signin_button'])) {
+            Session::setValue('error', 'Пустой токен.');
         }
     }
 

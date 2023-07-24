@@ -33,7 +33,7 @@ AuthorizationController::signin();
                     <label for="token">Введите токен:</label>
                     <div class="text-center">
                         <input type="text" name="token" value="<?=User::getToken()?>" class="form-control"/>
-                        <input type="submit" class="btn btn-secondary button_yellow authorization-form__submit" value="Войти"/>
+                        <input type="submit" class="btn btn-secondary button_yellow authorization-form__submit" name="signin_button" value="Войти"/>
                     </div>
                 </form>
             </div>
