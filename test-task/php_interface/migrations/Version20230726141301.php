@@ -9,23 +9,42 @@ class Version20230726141301 extends Version
 
     protected $moduleVersion = "4.2.4";
 
+    private $iblockSectionID = 'job_cars';
+
+    /**
+     * Установить миграцию.
+     */
     public function up()
     {
         $helper = $this->getHelperManager();
-        $carBrandsHlBlockId = self::carBrandUp($helper);
+        /**
+         * Добавление хайлоад-блока для марок автомобилей.
+         */
+        $carBrandsHlBlockId = $this->carBrandUp($helper);
+        /**
+         * Добавить раздел инфоблоков.
+         */
+        $this->iblockSectionUp($this->iblockSectionID, $helper);
     }
 
+    /**
+     * Откатить миграцию.
+     */
     public function down()
     {
         $helper = $this->getHelperManager();
-        self::carBrandDown($helper);
+        /**
+         * Удалить хайлоад-блок марок автомобилей.
+         */
+        $this->carBrandDown($helper);
     }
 
     /**
      * Добавить хайлоад-блок для марки автомобиля.
+     * @param HelperManager $helper Менеджер для выполнения действий миграции.
      * @return int Идентификатор добавленного хайлоад-блока.
      */
-    private static function carBrandUp($helper)
+    private function carBrandUp($helper)
     {
         $carBrandsHlBlockId = $helper->Hlblock()->saveHlblock([
             'NAME' => 'CarBrand',
@@ -62,9 +81,34 @@ class Version20230726141301 extends Version
     }
 
     /**
-     * Удалить хайлоад-блок марки автомобиля.
+     * Добавить раздел для добавляемых инфоблоков.
+     * @param int $iblockSectionID Идентификатор раздела инфоблоков.
+     * @param HelperManager $helper Менеджер для выполнения действий миграции.
      */
-    private static function carBrandDown($helper)
+    private function iblockSectionUp($iblockSectionID, $helper)
+    {
+        $helper->Iblock()->saveIblockType([
+            'ID' => $iblockSectionID,
+            'LANG' => [
+                'en' => [
+                    'NAME' => 'Job cars',
+                    'SECTION_NAME' => 'Sections',
+                    'ELEMENT_NAME' => 'Elements',
+                ],
+                'ru' => [
+                    'NAME' => 'Служебные поездки',
+                    'SECTION_NAME' => 'Разделы',
+                    'ELEMENT_NAME' => 'Элементы',
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Удалить хайлоад-блок марки автомобиля.
+     * @param HelperManager $helper Менеджер для выполнения действий миграции.
+     */
+    private function carBrandDown($helper)
     {
         $carBrandsHlBlockId = $helper->Hlblock()->getHlblockIdIfExists('CarBrand');
 
