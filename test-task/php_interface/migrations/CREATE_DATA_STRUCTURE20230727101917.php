@@ -22,6 +22,9 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
     private $iblockCodes = [
         'DRIVERS' => [
             'CODE' => 'job_cars_drivers'
+        ],
+        'CARS' => [
+            'CODE' => 'job_cars'
         ]
     ];
 
@@ -33,26 +36,30 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
         'BRANDS' => [
             'NAME' => 'CarBrands',
             'FIELDS' => [
-                'NAME' => 'UF_CAR_BRAND_NAME',
+                'NAME' => 'UF_NAME',
+                'XML' => 'UF_XML_ID',
                 'LOGO' => 'UF_CAR_BRAND_LOGO'
             ]
         ],
         'COMFORTABILITY' => [
             'NAME' => 'ComfortabilityCategories',
             'FIELDS' => [
-                'NAME' => 'UF_COMFORTABILITY_CATEGORY_NAME'
+                'NAME' => 'UF_NAME',
+                'XML' => 'UF_XML_ID',
             ]
         ],
         'POSITIONS' => [
             'NAME' => 'Positions',
             'FIELDS' => [
-                'NAME' => 'UF_POSITION_NAME'
+                'NAME' => 'UF_NAME',
+                'XML' => 'UF_XML_ID',
             ]
         ],
         'MODELS' => [
             'NAME' => 'CarModels',
             'FIELDS' => [
-                'NAME' => 'UF_CAR_MODEL_NAME',
+                'NAME' => 'UF_NAME',
+                'XML' => 'UF_XML_ID',
                 'PHOTO' => 'UF_CAR_MODEL_PHOTO',
                 'BRAND' => 'UF_CAR_BRAND_OF_MODEL',
                 'COMFORTABILITY' => 'UF_CAR_COMFORTABILITY_OF_MODEL'
@@ -109,6 +116,10 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
             $positionHlBlockId,
             $comfortabilityHlBlockId
         );
+        /*
+         * Добавить автомобили. 
+         */
+        $carIblockId = $this->carUp($helper, $driversIblockId);
     }
 
     /**
@@ -117,6 +128,10 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
     public function down()
     {
         $helper = $this->getHelperManager();
+        /*
+         * Удалить инфоблок автомобилей. 
+         */
+        $this->carDown($helper);
         /*
          * Удалить сопоставление должностей и категорий комфорта. 
          */
@@ -169,6 +184,16 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
                     'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
                 ],
                 [
+                    'FIELD_NAME' => $this->hlblockCodes['BRANDS']['FIELDS']['XML'],
+                    'USER_TYPE_ID' => 'string',
+                    'MANDATORY' => 'Y',
+                    'EDIT_FORM_LABEL' => Array('ru' => 'XML_ID', 'en' => 'XML_ID'),
+                    'LIST_COLUMN_LABEL' => Array('ru' => 'XML_ID', 'en' => 'XML_ID'),
+                    'LIST_FILTER_LABEL' => Array('ru' => 'XML_ID', 'en' => 'XML_ID'),
+                    'ERROR_MESSAGE' => Array('ru' => '', 'en' => ''),
+                    'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
+                ],
+                [
                     'FIELD_NAME' => $this->hlblockCodes['BRANDS']['FIELDS']['LOGO'], 
                     'USER_TYPE_ID' => 'file',
                     'MANDATORY' => 'N',
@@ -192,6 +217,8 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
     {
         $helper->Iblock()->saveIblockType([
             'ID' => $this->iblockSectionID,
+            'SECTIONS' => 'Y',
+            'IN_RSS' => 'N',
             'LANG' => [
                 'en' => [
                     'NAME' => 'Job cars',
@@ -220,7 +247,7 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
             'LID' => ['s1'],
             'IBLOCK_TYPE_ID' => $this->iblockSectionID,
             'LIST_PAGE_URL' => '',
-            'DETAIL_PAGE_URL' => '#SITE_DIR#/news/#ELEMENT_ID#',
+            'DETAIL_PAGE_URL' => '#SITE_DIR#/car_drivers/#ELEMENT_ID#',
         ]);
         
         $helper->Iblock()->saveIblockFields($driversIblockId, [
@@ -233,12 +260,6 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
         ]);
 
         $arProps = [
-            [
-                'NAME' => 'Фамилия',
-                'CODE' => 'SURNAME',
-                'PROPERTY_TYPE' => 'S',
-                'IS_REQUIRED' => 'Y'
-            ],
             [
                 'NAME' => 'Имя',
                 'CODE' => 'NAME',
@@ -266,7 +287,7 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
 
             $helper->AdminIblock()->buildElementForm($driversIblockId, [
                 'Личные данные' => [
-                    'PROPERTY_SURNAME',
+                    'NAME' => 'Фамилия',
                     'PROPERTY_NAME',
                     'PROPERTY_PATRONYMIC',
                     'PROPERTY_PHONE'
@@ -301,7 +322,17 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
                     'LIST_FILTER_LABEL' => Array('ru' => 'Категория комфорта', 'en' => 'Comfortability class'),
                     'ERROR_MESSAGE' => Array('ru' => '', 'en' => ''),
                     'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
-                ]
+                ],
+                [
+                    'FIELD_NAME' => $this->hlblockCodes['COMFORTABILITY']['FIELDS']['XML'],
+                    'USER_TYPE_ID' => 'string',
+                    'MANDATORY' => 'Y',
+                    'EDIT_FORM_LABEL' => Array('ru' => 'XML_ID', 'en' => 'XML_ID'),
+                    'LIST_COLUMN_LABEL' => Array('ru' => 'XML_ID', 'en' => 'XML_ID'),
+                    'LIST_FILTER_LABEL' => Array('ru' => 'XML_ID', 'en' => 'XML_ID'),
+                    'ERROR_MESSAGE' => Array('ru' => '', 'en' => ''),
+                    'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
+                ],
             ]
         );
 
@@ -332,7 +363,17 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
                     'LIST_FILTER_LABEL' => Array('ru' => 'Должность', 'en' => 'Comfortability class'),
                     'ERROR_MESSAGE' => Array('ru' => '', 'en' => ''),
                     'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
-                ]
+                ],
+                [
+                    'FIELD_NAME' => $this->hlblockCodes['POSITIONS']['FIELDS']['XML'],
+                    'USER_TYPE_ID' => 'string',
+                    'MANDATORY' => 'Y',
+                    'EDIT_FORM_LABEL' => Array('ru' => 'XML_ID', 'en' => 'XML_ID'),
+                    'LIST_COLUMN_LABEL' => Array('ru' => 'XML_ID', 'en' => 'XML_ID'),
+                    'LIST_FILTER_LABEL' => Array('ru' => 'XML_ID', 'en' => 'XML_ID'),
+                    'ERROR_MESSAGE' => Array('ru' => '', 'en' => ''),
+                    'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
+                ],
             ]
         );
 
@@ -363,6 +404,16 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
                     'EDIT_FORM_LABEL' => Array('ru' => 'Название', 'en' => 'Model name'),
                     'LIST_COLUMN_LABEL' => Array('ru' => 'Название', 'en' => 'Model name'),
                     'LIST_FILTER_LABEL' => Array('ru' => 'Название', 'en' => 'Model name'),
+                    'ERROR_MESSAGE' => Array('ru' => '', 'en' => ''),
+                    'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
+                ],
+                [
+                    'FIELD_NAME' => $this->hlblockCodes['MODELS']['FIELDS']['XML'],
+                    'USER_TYPE_ID' => 'string',
+                    'MANDATORY' => 'Y',
+                    'EDIT_FORM_LABEL' => Array('ru' => 'XML_ID', 'en' => 'XML_ID'),
+                    'LIST_COLUMN_LABEL' => Array('ru' => 'XML_ID', 'en' => 'XML_ID'),
+                    'LIST_FILTER_LABEL' => Array('ru' => 'XML_ID', 'en' => 'XML_ID'),
                     'ERROR_MESSAGE' => Array('ru' => '', 'en' => ''),
                     'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
                 ],
@@ -419,6 +470,7 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
     }
 
     /**
+     * Добавить справочник с соответствием между должностями и категориями комфорта.
      * @param HelperManager $helper Менеджер для выполнения действий миграции.
      * @param int $positionId Идентификатор хайлоад-блока с должностями.
      * @param int $comfId Идентификатор хайлоад-блока с категориями комфорта.
@@ -477,6 +529,72 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
     }
 
     /**
+     * Добавить инфоблок служебных автомобилей.
+     * @param HelperManager $helper Менеджер для выполнения действий миграции.
+     * @param int $driverId Идентификатор инфоблока водителей.
+     * @return int Идентификатор созданного инфоблока.
+     */
+    private function carUp($helper, $driverId)
+    {
+        $carsIblockId = $helper->Iblock()->saveIblock([
+            'NAME' => 'Автомобили',
+            'CODE' => $this->iblockCodes['CARS']['CODE'],
+            'LID' => ['s1'],
+            'IBLOCK_TYPE_ID' => $this->iblockSectionID,
+            'LIST_PAGE_URL' => '',
+            'DETAIL_PAGE_URL' => '#SITE_DIR#/cars/#ELEMENT_ID#',
+        ]);
+
+        $arProps = [
+            [
+                'NAME' => 'Год выпуска',
+                'CODE' => 'CAR_MANUFACT_DATE',
+                'PROPERTY_TYPE' => 'N'
+            ],
+            [
+                'NAME' => 'Водитель',
+                'CODE' => 'CAR_DRIVER',
+                'PROPERTY_TYPE' => 'E',
+                'USER_TYPE' => 'EList',
+                'LINK_IBLOCK_ID' => $driverId
+            ],
+            [
+                'NAME' => 'Модель автомобиля',
+                'CODE' => 'CAR_MODEL',
+                'PROPERTY_TYPE' => 'S',
+                'USER_TYPE' => 'directory',
+                'LIST_TYPE' => 'L',
+                'USER_TYPE_SETTINGS' => array(
+                    "size"=>"1", 
+                    "width"=>"0", 
+                    "group"=>"N", 
+                    "multiple"=>"N", 
+                    "TABLE_NAME"=>"hl_car_model"
+                )
+            ]
+        ];
+        if ($carsIblockId) {
+            foreach ($arProps as $arProp) {
+                $helper->Iblock()->addPropertyIfNotExists(
+                    $carsIblockId,
+                    $arProp
+                );
+            }
+
+            $helper->AdminIblock()->buildElementForm($carsIblockId, [
+                'Данные автомобиля' => [
+                    'NAME' => 'Госномер',
+                    'PROPERTY_CAR_MANUFACT_DATE',
+                    'PROPERTY_CAR_DRIVER',
+                    'PROPERTY_CAR_MODEL'
+                ]
+            ]);
+        }
+
+        return $carsIblockId;
+    }
+
+    /**
      * Удалить хайлоад-блок марки автомобиля.
      * @param HelperManager $helper Менеджер для выполнения действий миграции.
      */
@@ -490,7 +608,8 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
             'HLBLOCK_' . $carBrandsHlBlockId,
             [
                 $this->hlblockCodes['BRANDS']['FIELDS']['NAME'],
-                $this->hlblockCodes['BRANDS']['FIELDS']['LOGO']
+                $this->hlblockCodes['BRANDS']['FIELDS']['LOGO'],
+                $this->hlblockCodes['BRANDS']['FIELDS']['XML']
             ]
         );
         $helper->Hlblock()->deleteHlblock($carBrandsHlBlockId);
@@ -520,7 +639,8 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
         $helper->UserTypeEntity()->deleteUserTypeEntitiesIfExists(
             'HLBLOCK_' . $combofrtabilityHlBlockId,
             [
-                $this->hlblockCodes['COMFORTABILITY']['FIELDS']['NAME']
+                $this->hlblockCodes['COMFORTABILITY']['FIELDS']['NAME'],
+                $this->hlblockCodes['COMFORTABILITY']['FIELDS']['XML']
             ]
         );
         $helper->Hlblock()->deleteHlblock($combofrtabilityHlBlockId);
@@ -539,7 +659,8 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
         $helper->UserTypeEntity()->deleteUserTypeEntitiesIfExists(
             'HLBLOCK_' . $positionHlBlockId,
             [
-                $this->hlblockCodes['POSITIONS']['FIELDS']['NAME']
+                $this->hlblockCodes['POSITIONS']['FIELDS']['NAME'],
+                $this->hlblockCodes['POSITIONS']['FIELDS']['XML']
             ]
         );
         $helper->Hlblock()->deleteHlblock($positionHlBlockId);
@@ -559,6 +680,7 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
             'HLBLOCK_' . $carModelsHlBlockId,
             [
                 $this->hlblockCodes['MODELS']['FIELDS']['NAME'],
+                $this->hlblockCodes['MODELS']['FIELDS']['XML'],
                 $this->hlblockCodes['MODELS']['FIELDS']['PHOTO'],
                 $this->hlblockCodes['MODELS']['FIELDS']['BRAND'],
                 $this->hlblockCodes['MODELS']['FIELDS']['COMFORTABILITY']
@@ -585,5 +707,16 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
             ]
         );
         $helper->Hlblock()->deleteHlblock($comfAvalHlBlockId);
+    }
+
+    /**
+     * Удалить инфоблок служебных автомобилей.
+     * @param HelperManager $helper Менеджер для выполнения действий миграции.
+     */
+    private function carDown($helper)
+    {
+        $result = $helper->Iblock()->deleteIblockIfExists(
+            $this->iblockCodes['CARS']['CODE']
+        );
     }
 }
