@@ -71,6 +71,15 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
                 'POSITION' => 'UF_COMF_AVAIL_POSITION',
                 'CATEGORY' => 'UF_COMF_AVAIL_CATEGORY'
             ]
+        ],
+        'CAR_BOOKING' => [
+            'NAME' => 'JobCarBookings',
+            'FIELDS' => [
+                'START' => 'UF_CAR_BOOKING_START',
+                'END' => 'UF_CAR_BOOKING_END',
+                'USER' => 'UF_CAR_BOOKING_USER_ID',
+                'CAR' => 'UF_CAR_BOOKING_CHOSEN_CAR'
+            ]
         ]
     ];
 
@@ -120,6 +129,10 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
          * Добавить автомобили. 
          */
         $carIblockId = $this->carUp($helper, $driversIblockId);
+        /*
+         * Добавить бронирование автомобилей. 
+         */
+        $carBookingHlblockId = $this->carBookingUp($helper, $carIblockId);
     }
 
     /**
@@ -156,6 +169,10 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
          * Удалить хайлоад-блок марок автомобилей.
          */
         $this->carBrandDown($helper);
+        /*
+         * Удалить хайлоад-блок бронирования автомобилей. 
+         */
+        $this->carBookingDown($helper);
     }
 
     /**
@@ -595,6 +612,69 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
     }
 
     /**
+     * Добавить хайлоад-блок для хранения фактов "бронирования"
+     * служебных автомобилей на определенное время.
+     * @param HelperManager $helper Менеджер для выполнения действий миграции.
+     * @param int $carId Идентификатор инфоблока служебных автомобилей.
+     * @return int Идентификатор созданного хайлоад-блока.
+     */
+    private function carBookingUp($helper, $carId)
+    {
+        $carBookingHlblockId = $helper->Hlblock()->saveHlBlock([
+            'NAME' => $this->hlblockCodes['CAR_BOOKING']['NAME'],
+            'TABLE_NAME' => 'hl_job_car_booking',
+        ]);
+
+        $helper->UserTypeEntity()->addUserTypeEntitiesIfNotExists(
+            'HLBLOCK_' . $carBookingHlblockId,
+            [
+                [
+                    'FIELD_NAME' => $this->hlblockCodes['CAR_BOOKING']['FIELDS']['START'],
+                    'USER_TYPE_ID' => 'datetime',
+                    'MANDATORY' => 'Y',
+                    'EDIT_FORM_LABEL' => Array('ru' => 'Начало поездки', 'en' => 'Drive start'),
+                    'LIST_COLUMN_LABEL' => Array('ru' => 'Начало поездки', 'en' => 'Drive start'),
+                    'LIST_FILTER_LABEL' => Array('ru' => 'Начало поездки', 'en' => 'Drive start'),
+                    'ERROR_MESSAGE' => Array('ru' => '', 'en' => ''),
+                    'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
+                ],
+                [
+                    'FIELD_NAME' => $this->hlblockCodes['CAR_BOOKING']['FIELDS']['END'],
+                    'USER_TYPE_ID' => 'datetime',
+                    'MANDATORY' => 'Y',
+                    'EDIT_FORM_LABEL' => Array('ru' => 'Окончание поездки', 'en' => 'Drive end'),
+                    'LIST_COLUMN_LABEL' => Array('ru' => 'Окончание поездки', 'en' => 'Drive end'),
+                    'LIST_FILTER_LABEL' => Array('ru' => 'Окончание поездки', 'en' => 'Drive end'),
+                    'ERROR_MESSAGE' => Array('ru' => '', 'en' => ''),
+                    'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
+                ],
+                [
+                    'FIELD_NAME' => $this->hlblockCodes['CAR_BOOKING']['FIELDS']['USER'],
+                    'USER_TYPE_ID' => 'integer',
+                    'MANDATORY' => 'Y',
+                    'EDIT_FORM_LABEL' => Array('ru' => 'ID сотрудника', 'en' => 'Employee ID'),
+                    'LIST_COLUMN_LABEL' => Array('ru' => 'ID сотрудника', 'en' => 'Employee ID'),
+                    'LIST_FILTER_LABEL' => Array('ru' => 'ID сотрудника', 'en' => 'Employee ID'),
+                    'ERROR_MESSAGE' => Array('ru' => '', 'en' => ''),
+                    'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
+                ],
+                [
+                    'FIELD_NAME' => $this->hlblockCodes['CAR_BOOKING']['FIELDS']['CAR'],
+                    'USER_TYPE_ID' => 'integer',
+                    'MANDATORY' => 'Y',
+                    'EDIT_FORM_LABEL' => Array('ru' => 'ID служебного автомобиля', 'en' => 'Car ID'),
+                    'LIST_COLUMN_LABEL' => Array('ru' => 'ID служебного автомобиля', 'en' => 'Car ID'),
+                    'LIST_FILTER_LABEL' => Array('ru' => 'ID служебного автомобиля', 'en' => 'Car ID'),
+                    'ERROR_MESSAGE' => Array('ru' => '', 'en' => ''),
+                    'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
+                ]
+            ]
+        );
+
+        return $carBookingHlblockId;
+    }
+
+    /**
      * Удалить хайлоад-блок марки автомобиля.
      * @param HelperManager $helper Менеджер для выполнения действий миграции.
      */
@@ -718,5 +798,27 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
         $result = $helper->Iblock()->deleteIblockIfExists(
             $this->iblockCodes['CARS']['CODE']
         );
+    }
+
+    /**
+     * Удаление хайлоад-блока для бронирования служебных автомобилей.
+     * @param HelperManager $helper Менеджер для выполнения действий миграции.
+     */
+    private function carBookingDown($helper)
+    {
+        $carBookingHlblockId = $helper->Hlblock()->getHlblockIdIfExists(
+            $this->hlblockCodes['CAR_BOOKING']['NAME']
+        );
+
+        $helper->UserTypeEntity()->deleteUserTypeEntitiesIfExists(
+            'HLBLOCK_' . $carBookingHlblockId,
+            [
+                $this->hlblockCodes['CAR_BOOKING']['FIELDS']['START'],
+                $this->hlblockCodes['CAR_BOOKING']['FIELDS']['END'],
+                $this->hlblockCodes['CAR_BOOKING']['FIELDS']['USER'],
+                $this->hlblockCodes['CAR_BOOKING']['FIELDS']['CAR']
+            ]
+        );
+        $helper->Hlblock()->deleteHlblock($carBookingHlblockId);
     }
 }
