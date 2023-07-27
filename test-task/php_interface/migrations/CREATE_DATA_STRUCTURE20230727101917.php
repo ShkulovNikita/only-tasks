@@ -3,13 +3,69 @@
 namespace Sprint\Migration;
 
 
-class Version20230726141301 extends Version
+class CREATE_DATA_STRUCTURE20230727101917 extends Version
 {
     protected $description = "Создать инфоблоки и highload-блоки для компонента выбора служебного автомобиля.";
 
     protected $moduleVersion = "4.2.4";
 
+    /**
+     * Код добавляемого раздела для инфоблоков.
+     * @var string
+     */
     private $iblockSectionID = 'job_cars';
+    
+    /**
+     * Массив с символьными кодами добавляемых инфоблоков и их полей.
+     * @var array 
+     */
+    private $iblockCodes = [
+        'DRIVERS' => [
+            'CODE' => 'job_cars_drivers'
+        ]
+    ];
+
+    /**
+     * Массив с кодами добавляемых хайлоад-блоков и их полей.
+     * @var array
+     */
+    private $hlblockCodes = [
+        'BRANDS' => [
+            'NAME' => 'CarBrands',
+            'FIELDS' => [
+                'NAME' => 'UF_CAR_BRAND_NAME',
+                'LOGO' => 'UF_CAR_BRAND_LOGO'
+            ]
+        ],
+        'COMFORTABILITY' => [
+            'NAME' => 'ComfortabilityCategories',
+            'FIELDS' => [
+                'NAME' => 'UF_COMFORTABILITY_CATEGORY_NAME'
+            ]
+        ],
+        'POSITIONS' => [
+            'NAME' => 'Positions',
+            'FIELDS' => [
+                'NAME' => 'UF_POSITION_NAME'
+            ]
+        ],
+        'MODELS' => [
+            'NAME' => 'CarModels',
+            'FIELDS' => [
+                'NAME' => 'UF_CAR_MODEL_NAME',
+                'PHOTO' => 'UF_CAR_MODEL_PHOTO',
+                'BRAND' => 'UF_CAR_BRAND_OF_MODEL',
+                'COMFORTABILITY' => 'UF_CAR_COMFORTABILITY_OF_MODEL'
+            ]
+        ],
+        'COMFORTABILITY_AVAILABLE' => [
+            'NAME' => 'ComfortabilityAvailability',
+            'FIELDS' => [
+                'POSITION' => 'UF_COMF_AVAIL_POSITION',
+                'CATEGORY' => 'UF_COMF_AVAIL_CATEGORY'
+            ]
+        ]
+    ];
 
     /**
      * Установить миграцию.
@@ -30,16 +86,28 @@ class Version20230726141301 extends Version
          */
         $driversIblockId = $this->driversUp($helper);
         /*
-         * Добавить категорию комфорта .
+         * Добавить категории комфорта.
          */
-        $combofrtabilityHlBlockId = $this->comfortabilityUp($helper);
+        $comfortabilityHlBlockId = $this->comfortabilityUp($helper);
+        /*
+         * Добавить должности.
+         */
+        $positionHlBlockId = $this->positionUp($helper);
         /*
          * Добавить модели автомобилей. 
          */
         $carModelsHlBlockId = $this->carModelUp(
             $helper, 
             $carBrandsHlBlockId, 
-            $combofrtabilityHlBlockId
+            $comfortabilityHlBlockId
+        );
+        /*
+         * Добавить доступность категорий годности по должностям.
+         */
+        $comfAvalHlBlockId = $this->comfortabilityAvailabilityUp(
+            $helper,
+            $positionHlBlockId,
+            $comfortabilityHlBlockId
         );
     }
 
@@ -50,9 +118,17 @@ class Version20230726141301 extends Version
     {
         $helper = $this->getHelperManager();
         /*
+         * Удалить сопоставление должностей и категорий комфорта. 
+         */
+        $this->comfortabilityAvailabilityDown($helper);
+        /*
          * Удалить модели автомобилей. 
          */
         $this->carModelDown($helper);
+        /*
+         * Удалить должности 
+         */
+        $this->positionDown($helper);
         /*
          * Удалить категорию комфорта.
          */
@@ -75,7 +151,7 @@ class Version20230726141301 extends Version
     private function carBrandUp($helper)
     {
         $carBrandsHlBlockId = $helper->Hlblock()->saveHlblock([
-            'NAME' => 'CarBrands',
+            'NAME' => $this->hlblockCodes['BRANDS']['NAME'],
             'TABLE_NAME' => 'hl_car_brand',
         ]);
 
@@ -83,7 +159,7 @@ class Version20230726141301 extends Version
             'HLBLOCK_' . $carBrandsHlBlockId,
             [
                 [
-                    'FIELD_NAME' => 'UF_CAR_BRAND_NAME', 
+                    'FIELD_NAME' => $this->hlblockCodes['BRANDS']['FIELDS']['NAME'], 
                     'USER_TYPE_ID' => 'string',
                     'MANDATORY' => 'Y',
                     'EDIT_FORM_LABEL' => Array('ru' => 'Название', 'en' => 'Brand name'),
@@ -93,7 +169,7 @@ class Version20230726141301 extends Version
                     'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
                 ],
                 [
-                    'FIELD_NAME' => 'UF_CAR_BRAND_LOGO', 
+                    'FIELD_NAME' => $this->hlblockCodes['BRANDS']['FIELDS']['LOGO'], 
                     'USER_TYPE_ID' => 'file',
                     'MANDATORY' => 'N',
                     'EDIT_FORM_LABEL' => Array('ru' => 'Логотип', 'en' => 'Brand logo'),
@@ -140,7 +216,7 @@ class Version20230726141301 extends Version
     {
         $driversIblockId = $helper->Iblock()->saveIblock([
             'NAME' => 'Водители',
-            'CODE' => 'job_cars_drivers',
+            'CODE' => $this->iblockCodes['DRIVERS']['CODE'],
             'LID' => ['s1'],
             'IBLOCK_TYPE_ID' => $this->iblockSectionID,
             'LIST_PAGE_URL' => '',
@@ -182,7 +258,10 @@ class Version20230726141301 extends Version
         ];
         if ($driversIblockId) {
             foreach ($arProps as $arProp) {
-                $helper->Iblock()->addPropertyIfNotExists($driversIblockId, $arProp);
+                $helper->Iblock()->addPropertyIfNotExists(
+                    $driversIblockId, 
+                    $arProp
+                );
             }
 
             $helper->AdminIblock()->buildElementForm($driversIblockId, [
@@ -205,16 +284,16 @@ class Version20230726141301 extends Version
      */
     private function comfortabilityUp($helper)
     {
-        $combofrtabilityHlBlockId = $helper->Hlblock()->saveHlblock([
-            'NAME' => 'ComfortabilityCategories',
+        $comfortabilityHlBlockId = $helper->Hlblock()->saveHlblock([
+            'NAME' => $this->hlblockCodes['COMFORTABILITY']['NAME'],
             'TABLE_NAME' => 'hl_comfortability_category',
         ]);
 
         $helper->UserTypeEntity()->addUserTypeEntitiesIfNotExists(
-            'HLBLOCK_' . $combofrtabilityHlBlockId,
+            'HLBLOCK_' . $comfortabilityHlBlockId,
             [
                 [
-                    'FIELD_NAME' => 'UF_COMFORTABILITY_CATEGORY_NAME',
+                    'FIELD_NAME' => $this->hlblockCodes['COMFORTABILITY']['FIELDS']['NAME'],
                     'USER_TYPE_ID' => 'string',
                     'MANDATORY' => 'Y',
                     'EDIT_FORM_LABEL' => Array('ru' => 'Категория комфорта', 'en' => 'Comfortability class'),
@@ -226,18 +305,51 @@ class Version20230726141301 extends Version
             ]
         );
 
-        return $combofrtabilityHlBlockId;
+        return $comfortabilityHlBlockId;
+    }
+
+    /**
+     * Создать справочник с должностями.
+     * @param HelperManager $helper Менеджер для выполнения действий миграции.
+     * @return int Идентификатор созданного хайлоад-блока.
+     */
+    private function positionUp($helper)
+    {
+        $positionHlBlockId = $helper->Hlblock()->saveHlblock([ 
+            'NAME' => $this->hlblockCodes['POSITIONS']['NAME'],
+            'TABLE_NAME' => 'hl_jobcars_positions',
+        ]);
+
+        $helper->UserTypeEntity()->addUserTypeEntitiesIfNotExists(
+            'HLBLOCK_' . $positionHlBlockId,
+            [
+                [
+                    'FIELD_NAME' => $this->hlblockCodes['POSITIONS']['FIELDS']['NAME'],
+                    'USER_TYPE_ID' => 'string',
+                    'MANDATORY' => 'Y',
+                    'EDIT_FORM_LABEL' => Array('ru' => 'Должность', 'en' => 'Comfortability class'),
+                    'LIST_COLUMN_LABEL' => Array('ru' => 'Должность', 'en' => 'Comfortability class'),
+                    'LIST_FILTER_LABEL' => Array('ru' => 'Должность', 'en' => 'Comfortability class'),
+                    'ERROR_MESSAGE' => Array('ru' => '', 'en' => ''),
+                    'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
+                ]
+            ]
+        );
+
+        return $positionHlBlockId;
     }
 
     /**
      * Добавить справочник моделей автомобилей.
      * @param HelperManager $helper Менеджер для выполнения действий миграции.
+     * @param int $brandId Идентификатор хайлоад-блока с марками автомобилей.
+     * @param int $comfortabilityId Идентификатор хайлоад-блока с категориями комфорта.
      * @return int Идентификатор созданного хайлоад-блока.
      */
     private function carModelUp($helper, $brandId, $comfortabilityId)
     {
         $carModelsHlBlockId = $helper->Hlblock()->saveHlblock([
-            'NAME' => 'CarModels',
+            'NAME' => $this->hlblockCodes['MODELS']['NAME'],
             'TABLE_NAME' => 'hl_car_model',
         ]);
 
@@ -245,7 +357,7 @@ class Version20230726141301 extends Version
             'HLBLOCK_' . $carModelsHlBlockId,
             [
                 [
-                    'FIELD_NAME' => 'UF_CAR_MODEL_NAME',
+                    'FIELD_NAME' => $this->hlblockCodes['MODELS']['FIELDS']['NAME'],
                     'USER_TYPE_ID' => 'string',
                     'MANDATORY' => 'Y',
                     'EDIT_FORM_LABEL' => Array('ru' => 'Название', 'en' => 'Model name'),
@@ -255,7 +367,7 @@ class Version20230726141301 extends Version
                     'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
                 ],
                 [
-                    'FIELD_NAME' => 'UF_CAR_MODEL_PHOTO',
+                    'FIELD_NAME' => $this->hlblockCodes['MODELS']['FIELDS']['PHOTO'],
                     'USER_TYPE_ID' => 'file',
                     'MANDATORY' => 'N',
                     'EDIT_FORM_LABEL' => Array('ru' => 'Изображение', 'en' => 'Model photo'),
@@ -265,7 +377,7 @@ class Version20230726141301 extends Version
                     'HELP_MESSAGE' => Array('ru' => '', 'en' => '')
                 ],
                 [
-                    'FIELD_NAME' => 'UF_CAR_BRAND_OF_MODEL',
+                    'FIELD_NAME' => $this->hlblockCodes['MODELS']['FIELDS']['BRAND'],
                     'USER_TYPE_ID' => 'hlblock',
                     'MANDATORY' => 'Y',
                     'EDIT_FORM_LABEL' => Array('ru' => 'Марка', 'en' => 'Car brand'),
@@ -277,13 +389,13 @@ class Version20230726141301 extends Version
                         'LIST_HEIGHT' => 3,
                         'HLBLOCK_ID' => $brandId,
                         'HLFIELD_ID' => $helper->Hlblock()->getFieldIdByUid(
-                            'CarBrands',
-                            'UF_CAR_BRAND_NAME'
+                            $this->hlblockCodes['BRANDS']['NAME'],
+                            $this->hlblockCodes['BRANDS']['FIELDS']['NAME']
                         )
                     )
                 ],
                 [
-                    'FIELD_NAME' => 'UF_CAR_COMFORTABILITY_OF_MODEL',
+                    'FIELD_NAME' => $this->hlblockCodes['MODELS']['FIELDS']['COMFORTABILITY'],
                     'USER_TYPE_ID' => 'hlblock',
                     'MANDATORY' => 'Y',
                     'EDIT_FORM_LABEL' => Array('ru' => 'Категория комфорта', 'en' => 'Comfortability'),
@@ -295,8 +407,8 @@ class Version20230726141301 extends Version
                         'LIST_HEIGHT' => 3,
                         'HLBLOCK_ID' => $comfortabilityId,
                         'HLFIELD_ID' => $helper->Hlblock()->getFieldIdByUid(
-                            'ComfortabilityCategories',
-                            'UF_COMFORTABILITY_CATEGORY_NAME'
+                            $this->hlblockCodes['COMFORTABILITY']['NAME'],
+                            $this->hlblockCodes['COMFORTABILITY']['FIELDS']['NAME']
                         )
                     )
                 ]
@@ -307,18 +419,78 @@ class Version20230726141301 extends Version
     }
 
     /**
+     * @param HelperManager $helper Менеджер для выполнения действий миграции.
+     * @param int $positionId Идентификатор хайлоад-блока с должностями.
+     * @param int $comfId Идентификатор хайлоад-блока с категориями комфорта.
+     * @return int Идентификатор созданного хайлоад-блока.
+     */
+    private function comfortabilityAvailabilityUp($helper, $positionId, $comfId)
+    {
+        $comfAvalHlBlockId = $helper->Hlblock()->saveHlBlock([
+            'NAME' => $this->hlblockCodes['COMFORTABILITY_AVAILABLE']['NAME'],
+            'TABLE_NAME' => 'hl_comfortability_availability',
+        ]);
+
+        $helper->UserTypeEntity()->addUserTypeEntitiesIfNotExists(
+            'HLBLOCK_' . $comfAvalHlBlockId,
+            [
+                [
+                    'FIELD_NAME' => $this->hlblockCodes['COMFORTABILITY_AVAILABLE']['FIELDS']['POSITION'],
+                    'USER_TYPE_ID' => 'hlblock',
+                    'MANDATORY' => 'Y',
+                    'EDIT_FORM_LABEL' => Array('ru' => 'Должность', 'en' => 'Position'),
+                    'LIST_COLUMN_LABEL' => Array('ru' => 'Должность', 'en' => 'Position'),
+                    'LIST_FILTER_LABEL' => Array('ru' => 'Должность', 'en' => 'Position'),
+                    'ERROR_MESSAGE' => Array('ru' => '', 'en' => ''),
+                    'HELP_MESSAGE' => Array('ru' => '', 'en' => ''),
+                    'SETTINGS' => Array(
+                        'LIST_HEIGHT' => 3,
+                        'HLBLOCK_ID' => $positionId,
+                        'HLFIELD_ID' => $helper->Hlblock()->getFieldIdByUid(
+                            $this->hlblockCodes['POSITIONS']['NAME'],
+                            $this->hlblockCodes['POSITIONS']['FIELDS']['NAME']
+                        )
+                    )
+                ],
+                [
+                    'FIELD_NAME' => $this->hlblockCodes['COMFORTABILITY_AVAILABLE']['FIELDS']['CATEGORY'],
+                    'USER_TYPE_ID' => 'hlblock',
+                    'MANDATORY' => 'Y',
+                    'EDIT_FORM_LABEL' => Array('ru' => 'Доступная категория комфорта', 'en' => 'Available comfortability class'),
+                    'LIST_COLUMN_LABEL' => Array('ru' => 'Доступная категория комфорта', 'en' => 'Available comfortability class'),
+                    'LIST_FILTER_LABEL' => Array('ru' => 'Доступная категория комфорта', 'en' => 'Available comfortability class'),
+                    'ERROR_MESSAGE' => Array('ru' => '', 'en' => ''),
+                    'HELP_MESSAGE' => Array('ru' => '', 'en' => ''),
+                    'SETTINGS' => Array(
+                        'LIST_HEIGHT' => 3,
+                        'HLBLOCK_ID' => $comfId,
+                        'HLFIELD_ID' => $helper->Hlblock()->getFieldIdByUid(
+                            $this->hlblockCodes['COMFORTABILITY']['NAME'],
+                            $this->hlblockCodes['COMFORTABILITY']['FIELDS']['NAME']
+                        )
+                    )
+                ]
+            ]
+        );
+
+        return $comfAvalHlBlockId;
+    }
+
+    /**
      * Удалить хайлоад-блок марки автомобиля.
      * @param HelperManager $helper Менеджер для выполнения действий миграции.
      */
     private function carBrandDown($helper)
     {
-        $carBrandsHlBlockId = $helper->Hlblock()->getHlblockIdIfExists('CarBrands');
+        $carBrandsHlBlockId = $helper->Hlblock()->getHlblockIdIfExists(
+            $this->hlblockCodes['BRANDS']['NAME']
+        );
 
         $helper->UserTypeEntity()->deleteUserTypeEntitiesIfExists(
             'HLBLOCK_' . $carBrandsHlBlockId,
             [
-                'UF_CAR_BRAND_NAME',
-                'UF_CAR_BRAND_LOGO'
+                $this->hlblockCodes['BRANDS']['FIELDS']['NAME'],
+                $this->hlblockCodes['BRANDS']['FIELDS']['LOGO']
             ]
         );
         $helper->Hlblock()->deleteHlblock($carBrandsHlBlockId);
@@ -330,7 +502,9 @@ class Version20230726141301 extends Version
      */
     private function driversDown($helper)
     {
-        $result = $helper->Iblock()->deleteIblockIfExists('job_cars_drivers');
+        $result = $helper->Iblock()->deleteIblockIfExists(
+            $this->iblockCodes['DRIVERS']['CODE']
+        );
     }
 
     /**
@@ -339,15 +513,36 @@ class Version20230726141301 extends Version
      */
     private function comfortabilityDown($helper)
     {
-        $combofrtabilityHlBlockId = $helper->Hlblock()->getHlblockIdIfExists('ComfortabilityCategories');
+        $combofrtabilityHlBlockId = $helper->Hlblock()->getHlblockIdIfExists(
+            $this->hlblockCodes['COMFORTABILITY']['NAME']
+        );
        
         $helper->UserTypeEntity()->deleteUserTypeEntitiesIfExists(
             'HLBLOCK_' . $combofrtabilityHlBlockId,
             [
-                'UF_COMFORTABILITY_CATEGORY_NAME'
+                $this->hlblockCodes['COMFORTABILITY']['FIELDS']['NAME']
             ]
         );
         $helper->Hlblock()->deleteHlblock($combofrtabilityHlBlockId);
+    }
+
+    /**
+     * Удаление хайлоад-блока с должностями.
+     * @param HelperManager $helper Менеджер для выполнения действий миграции.
+     */
+    private function positionDown($helper)
+    {
+        $positionHlBlockId = $helper->Hlblock()->getHlblockIdIfExists(
+            $this->hlblockCodes['POSITIONS']['NAME']
+        );
+       
+        $helper->UserTypeEntity()->deleteUserTypeEntitiesIfExists(
+            'HLBLOCK_' . $positionHlBlockId,
+            [
+                $this->hlblockCodes['POSITIONS']['FIELDS']['NAME']
+            ]
+        );
+        $helper->Hlblock()->deleteHlblock($positionHlBlockId);
     }
 
     /**
@@ -356,17 +551,39 @@ class Version20230726141301 extends Version
      */
     private function carModelDown($helper)
     {
-        $carModelsHlBlockId = $helper->Hlblock()->getHlblockIdIfExists('CarModels');
+        $carModelsHlBlockId = $helper->Hlblock()->getHlblockIdIfExists(
+            $this->hlblockCodes['MODELS']['NAME']
+        );
 
         $helper->UserTypeEntity()->deleteUserTypeEntitiesIfExists(
             'HLBLOCK_' . $carModelsHlBlockId,
             [
-                'UF_CAR_MODEL_NAME',
-                'UF_CAR_MODEL_PHOTO',
-                'UF_CAR_BRAND_OF_MODEL',
-                'UF_CAR_COMFORTABILITY_OF_MODEL'
+                $this->hlblockCodes['MODELS']['FIELDS']['NAME'],
+                $this->hlblockCodes['MODELS']['FIELDS']['PHOTO'],
+                $this->hlblockCodes['MODELS']['FIELDS']['BRAND'],
+                $this->hlblockCodes['MODELS']['FIELDS']['COMFORTABILITY']
             ]
         );
         $helper->Hlblock()->deleteHlblock($carModelsHlBlockId);
+    }
+    
+    /**
+     * Удаление хайлоад-блока для сопоставления должностей и категорий комфорта.
+     * @param HelperManager $helper Менеджер для выполнения действий миграции.
+     */
+    private function comfortabilityAvailabilityDown($helper)
+    {
+        $comfAvalHlBlockId = $helper->Hlblock()->getHlblockIdIfExists(
+            $this->hlblockCodes['COMFORTABILITY_AVAILABLE']['NAME']
+        );
+
+        $helper->UserTypeEntity()->deleteUserTypeEntitiesIfExists(
+            'HLBLOCK_' . $comfAvalHlBlockId,
+            [
+                $this->hlblockCodes['COMFORTABILITY_AVAILABLE']['FIELDS']['POSITION'],
+                $this->hlblockCodes['COMFORTABILITY_AVAILABLE']['FIELDS']['CATEGORY']
+            ]
+        );
+        $helper->Hlblock()->deleteHlblock($comfAvalHlBlockId);
     }
 }
