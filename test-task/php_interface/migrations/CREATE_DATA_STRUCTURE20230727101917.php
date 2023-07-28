@@ -142,6 +142,10 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
     {
         $helper = $this->getHelperManager();
         /*
+         * Удалить хайлоад-блок бронирования автомобилей. 
+         */
+        $this->carBookingDown($helper);
+        /*
          * Удалить инфоблок автомобилей. 
          */
         $this->carDown($helper);
@@ -169,10 +173,6 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
          * Удалить хайлоад-блок марок автомобилей.
          */
         $this->carBrandDown($helper);
-        /*
-         * Удалить хайлоад-блок бронирования автомобилей. 
-         */
-        $this->carBookingDown($helper);
     }
 
     /**
