@@ -1,5 +1,5 @@
 <?php
-$MESS ['T_IBLOCK_TYPE_DESC_LIST'] = "Список инфоблоков";
-$MESS ['T_IBLOCK_TYPE_DESC_LIST_DESC'] = "Список элементов инфоблоков выбранного типа.";
-$MESS ['T_IBLOCK_TYPE_DESC_IBLOCKS'] = "Инфоблоки";
+$MESS ['T_JOB_CARS_COMPONENT_NAME'] = 'Список автомобилей';
+$MESS ['T_JOB_CARS_COMPONENT_DESC'] = 'Список доступных служебных автомобилей.';
+$MESS ['T_JOB_CARS_COMPONENT_TYPE_NAME'] = 'Тестовое задание';
 ?>
