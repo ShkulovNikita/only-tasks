@@ -6,7 +6,9 @@ if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true) {
 use Bitrix\Main\Context,
     Bitrix\Main\Type\DateTime,
     Bitrix\Main\Loader,
-    Bitrix\Iblock;
+    Bitrix\Main\Entity,
+    Bitrix\Iblock,
+    Bitrix\Highloadblock as HL; 
 
 class CCarsList extends CBitrixComponent
 {
@@ -40,22 +42,44 @@ class CCarsList extends CBitrixComponent
      * @var string
      */
     private $userPosition;
+    /**
+     * Символьные коды/названия используемых инфоблоков и хайлоад-блоков.
+     * @var array
+     */
+    private $codes = [
+        /*
+         * Инфоблоки. 
+         */
+        'job_cars' => 'job_cars',
+        'job_cars_drivers' => 'job_cars_drivers',
+        /*
+         * Хайлоад-блоки. 
+         */
+        'positions' => 'Positions',
+        'car_brands' => 'CarBrands',
+        'car_models' => 'CarModels',
+        'job_car_bookings' => 'JobCarBookings',
+        'comfortability_categories' => 'ComfortabilityCategories',
+        'comfortability_availability' => 'ComfortabilityAvailability',
+    ];
 
     /**
      * Код, выполняемый при вызове компонента.
      */
     public function executeComponent()
     {
-        /**
+        /*
          * Получить значения основных параметров компонента:
          * начало и конец поездки, должность текущего пользователя.
          */
-        $result = $this->prepareParameters();
-        /**
+        $this->prepareParameters();
+        /*
          * Получить доступные по времени автомобили.
          */
-        //TODO
-        /**
+        if ($this->startTime && $this->endTime && $this->userPosition) {
+            $cars = $this->findCars();
+        }
+        /*
          * Подключить шаблон компонента.
          */
         $this->IncludeComponentTemplate();
@@ -65,12 +89,12 @@ class CCarsList extends CBitrixComponent
      * Создать массив результата работы компонента arResult.
      */
     private function prepareParameters()
-    {        
+    {
         /*
          * Получить выбранное время начала и окончания поездки.
          */
-        $this->startTime = $this->getDriveDateTime($this->startTimeParam);
-        $this->endTime = $this->getDriveDateTime($this->endTimeParam);
+        $this->startTime = $this->getCarDriveDateTime($this->startTimeParam);
+        $this->endTime = $this->getCarDriveDateTime($this->endTimeParam);
         if (!$this->startTime || !$this->endTime) {
             return;
         }
@@ -99,13 +123,31 @@ class CCarsList extends CBitrixComponent
     }
 
     /**
+     * Получить список доступных служебных автомобилей.
+     * @return array Массив с данными о доступных служебных автомобилях.
+     */
+    private function findCars()
+    {
+        /*
+         * Идентификатор должности текущего пользователя в хайлоад-справочнике. 
+         */
+        $positionId = $this->findPositionInDirectory();
+        /*
+         * Определить, какие категории комфорта доступны пользователю согласно его должности. 
+         */
+        $comfortCategories = $this->getComfortCategories($positionId);
+
+        $this->arResult['hl'] = $comfortCategories;
+    }
+
+    /**
      * Получить и проверить дату-время начала или конца поездки (в часовом поясе сервера).
      * @param string $param Имя GET-параметра с временем 
      * (также указывает, является ли данное время началом или концом поездки)
      * @return Bitrix\Main\Type\DateTime|bool Дата-время начала или конца поездки либо false.
      */
-    private function getDriveDateTime($param)
-    {   
+    private function getCarDriveDateTime($param)
+    {
         /*
          * Получить время из GET-параметра.
          */
@@ -273,5 +315,121 @@ class CCarsList extends CBitrixComponent
             ShowError(GetMessage('T_JOB_CARS_CANT_GET_USER_DATA_ERROR'));
             return false;
         }
+    }
+
+    /**
+     * Получить идентификатор должности текущего пользователя в справочнике должностей.
+     * @return int Идентификатор должности в справочнике либо пустая строка.
+     */
+    private function findPositionInDirectory()
+    {
+        /*
+         * Получить имя класса хайлоад-блока должностей для выполнения запросов. 
+         */
+        $positionsHlblockName = $this->getHlblockByName($this->codes['positions']);
+        if ($positionsHlblockName === false) {
+            return '';
+        }
+        /*
+         * Выполнить запрос с фильтрацией по названию должности пользователя. 
+         */
+        $resPositions = $positionsHlblockName::getList(
+            [
+                'select' => ['ID'],
+                'order' => ['ID' => 'ASC'],
+                'filter' => ['UF_NAME' => $this->userPosition]
+            ]
+        )->fetchAll();
+        /*
+         * Если в справочнике найдена профессия текущего пользователя, то сохранить идентификатор.
+         */
+        if (count($resPositions) > 0) {
+            return $resPositions[0]['ID'];
+        } else {
+            return '';
+        }
+    }
+
+    /**
+     * Получить категории комфорта согласно указанной должности.
+     * @param int $positionId Идентификатор должности пользователя либо пустая строка.
+     * @return array Список идентификаторов категорий комфорта, доступных пользователю.
+     */
+    private function getComfortCategories($positionId)
+    {
+        /*
+         * Если идентификатор должности пустой, то должность пользователя не содержится в справочнике.
+         * В этом случае получить идентификатор самой низкой категории комфорта. 
+         */
+        if ($positionId == '') {
+            return $this->getComfortCategoryId('Третья');
+        } else {
+            /*
+             * Если идентификатор должности указан, то найти записи о сопоставлении должностей и категорий комфорта. 
+             */
+            return $this->getAllComfortCategoryIds($positionId);
+        }
+    }
+
+    /**
+     * Получить идентификатор указанной категории комфорта.
+     * @param string $categoryName Имя категории.
+     * @return int Идентификатор указанной категории комфорта в справочнике.
+     */
+    private function getComfortCategoryId($categoryName)
+    {
+        $comfortHlBlockName = $this->getHlblockByName($this->codes['comfortability_categories']);
+        $resComfCategories = $comfortHlBlockName::getList(
+            [
+                'select' => ['ID'],
+                'order' => ['ID' => 'ASC'],
+                'filter' => ['UF_NAME' => $categoryName]
+            ]
+        )->fetchAll();
+        if (count($resComfCategories) > 0) {
+            return $resComfCategories[0]['ID'];
+        } else {
+            return [];
+        }
+    }
+
+    /**
+     * Получить идентификаторы категорий комфорта для указанной должности.
+     * @param int Идентификатор должности пользователя в справочнике.
+     * @return array Массив идентификаторов доступных пользователю категорий комфорта.
+     */
+    private function getAllComfortCategoryIds($positionId)
+    {
+        $comfortHlBlockName = $this->getHlblockByName($this->codes['comfortability_availability']);
+        $resComfAvailability = $comfortHlBlockName::getList(
+            [
+                'select' => ['*'],
+                'order' => ['ID' => 'ASC'],
+                'filter' => ['UF_COMF_AVAIL_POSITION' => $positionId]
+            ]
+        )->fetchAll();
+        if (count($resComfAvailability) > 0) {
+            return array_column($resComfAvailability, 'UF_COMF_AVAIL_CATEGORY');
+        } else {
+            return [];
+        }
+    }
+
+    /**
+     * Получить сущность highload-блока по его имени.
+     * @param string $name Имя highload-блока.
+     * @return string Имя класса сущности для выполнения запросов.
+     */
+    private function getHlblockByName($name)
+    {
+        $hlblock = HL\HighloadBlockTable::getList([
+            'filter' => ['=NAME' => $name]
+        ])->fetch();
+        if (!$hlblock) {
+            return false;
+        }
+
+        $hlClassName = (HL\HighloadBlockTable::compileEntity($hlblock))->getDataClass();
+        return $hlClassName;
     }
 }
