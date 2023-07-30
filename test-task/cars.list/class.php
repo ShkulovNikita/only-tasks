@@ -77,7 +77,14 @@ class CCarsList extends CBitrixComponent
          * Получить доступные по времени автомобили.
          */
         if ($this->startTime && $this->endTime && $this->userPosition) {
-            $cars = $this->findCars();
+            /*
+             * Получить доступные пользователю служебные автомобили, их бренды, модели, категории комфорта и водителей.
+             */
+            $this->findCars($comfortCategories, $carModels, $availableCars, $carBrands, $carDrivers);
+            /*
+             * Сформировать массив результата работы компонента. 
+             */
+            $this->makeArResult($comfortCategories, $carModels, $availableCars);
         }
         /*
          * Подключить шаблон компонента.
@@ -123,10 +130,14 @@ class CCarsList extends CBitrixComponent
     }
 
     /**
-     * Получить список доступных служебных автомобилей.
-     * @return array Массив с данными о доступных служебных автомобилях.
+     * Получить данные о доступных пользователю служебных автомобилях, их категориях комфорта и моделях.
+     * @param array $comfortCategories Массив для категорий комфорта.
+     * @param array $carModels Массив для доступных пользователю моделей автомобилей.
+     * @param array $availableCars Массив доступных пользователю служебных автомобилей.
+     * @param array $carBrands Массив марок доступных автомобилей.
+     * @param array $carDrivers Массив водителей доступных автомобилей.
      */
-    private function findCars()
+    private function findCars(&$comfortCategories, &$carModels, &$availableCars, &$carBrands, &$carDrivers)
     {
         /*
          * Идентификатор должности текущего пользователя в хайлоад-справочнике. 
@@ -152,8 +163,34 @@ class CCarsList extends CBitrixComponent
          * Получить идентификаторы автомобилей, занятых на период, выбранный пользователем.
          */
         $takenCarIds = $this->getTakenCars();
+        /*
+         * Получить автомобили, доступные текущему пользователю. 
+         */
+        $carModelsIds = array_column($carModels, 'UF_XML_ID');
+        $availableCars = $this->getAvailableCars($takenCarIds, $carModelsIds);
+        /*
+         * Получить их бренды.
+         */
+        $carBrandsIds = array_column($carModels, 'UF_CAR_BRAND_OF_MODEL');
+        $carBrands = $this->getCarBrands($carBrandsIds);
+        /*
+         * Получить водителей. 
+         */
+        $driversIds = $this->getDriverIds($availableCars);
+        $carDrivers = $this->getCarDrivers($driversIds);
 
-        $this->arResult['hl'] = $takenCarIds;
+        $this->arResult['brands'] = $carDrivers;
+    }
+
+    /**
+     * Сформировать массив результата работы компонента.
+     * @param array $comfortCategories Массив категорий комфорта.
+     * @param array $carModels Массив доступных пользователю моделей автомобилей.
+     * @param array $availableCars Массив доступных пользователю служебных автомобилей.
+     */
+    private function makeArResult($comfortCategories, $carModels, $availableCars)
+    {
+        //TODO
     }
 
     /**
@@ -481,6 +518,29 @@ class CCarsList extends CBitrixComponent
     }
 
     /**
+     * Получить марки автомобилей.
+     * @param array $carBrandsIds Массив идентификаторов марок автомобилей.
+     * @return array Массив марок автомобилей указанных моделей.
+     */
+    private function getCarBrands($carBrandsIds)
+    {
+        print_r($carBrandsIds);
+        $brandHlBlockName = $this->getHlblockByName($this->codes['car_brands']);
+        $resBrands = $brandHlBlockName::getList(
+            [
+                'select' => ['*'],
+                'order' => ['ID' => 'ASC'],
+                'filter' => ['=ID' => $carBrandsIds]
+            ]
+        )->fetchAll();
+        if (count($resBrands) > 0) {
+            return $resBrands;
+        } else {
+            return [];
+        }
+    }
+
+    /**
      * Получить идентификаторы автомобилей, которые заняты на период, выбранный пользователем.
      * @return array Массив идентификаторов занятых автомобилей.
      */
@@ -547,6 +607,65 @@ class CCarsList extends CBitrixComponent
     }
 
     /**
+     * Получить доступные пользователю служебные автомобили.
+     * @param array $takenCarsIds Идентификаторы уже занятых автомобилей.
+     * @param array $modelIds Идентификаторы доступных пользователю моделей автомобилей.
+     * @return array Служебные автомобили, которыми может воспользоваться пользователь.
+     */
+    private function getAvailableCars($takenCarsIds, $modelIds)
+    {
+        $carsIblock = $this->getIblockByName($this->codes['job_cars']);
+
+        $arSelect = ['ID', 'IBLOCK_ID', 'NAME', 'PREVIEW_PICTURE', 'PROPERTY_*'];
+        $arFilter = [
+            /*
+             * Идентификатор инфоблока автомобилей. 
+             */
+            '=IBLOCK_ID' => $carsIblock['ID'],
+            /*
+             * В выборку войдут только незанятые автомобили. 
+             */
+            '!=ID' => $takenCarsIds,
+            /*
+             * Только модели доступного уровня комфорта. 
+             */
+            '=PROPERTY_CAR_MODEL' => $modelIds
+        ];
+        $res = CIBLOCKElement::GetList([], $arFilter, false, false, $arSelect);
+
+        $arCars = [];
+        while ($row = $res->GetNextElement()) {
+            $arCars[] = array_merge($row->GetFields(), $row->GetProperties());
+        }
+        
+        return $arCars;
+    }
+
+    /**
+     * Получить подробную информацию об указанных водителях.
+     * @param array $driversIds Массив идентификаторов водителей.
+     * @return array Массив водителей.
+     */
+    private function getCarDrivers($driversIds)
+    {
+        $driversIblock = $this->getIblockByName($this->codes['job_cars_drivers']);
+
+        $arSelect = ['ID', 'IBLOCK_ID', 'NAME', 'PREVIEW_PICTURE', 'PROPERTY_*'];
+        $arFilter = [
+            '=IBLOCK_ID' => $driversIblock['ID'],
+            '=ID' => $driversIds
+        ];
+        $res = CIBlockElement::GetList([], $arFilter, false, false, $arSelect);
+
+        $arDrivers = [];
+        while ($row = $res->GetNextElement()) {
+            $arDrivers[] = array_merge($row->GetFields(), $row->GetProperties());
+        }
+
+        return $arDrivers;
+    }
+
+    /**
      * Получить сущность highload-блока по его имени.
      * @param string $name Имя highload-блока.
      * @return string|bool Имя класса сущности для выполнения запросов.
@@ -565,9 +684,9 @@ class CCarsList extends CBitrixComponent
     }
     
     /**
-     * Получить имя сущности инфоблока.
+     * Получить инфоблок по его символьному коду.
      * @param string $name Имя инфоблока.
-     * @return string|bool Имя класса инфоблока для выполнения запросов.
+     * @return string|bool Инфоблок с указанным именем.
      */
     private function getIblockByName($name)
     {
@@ -578,6 +697,20 @@ class CCarsList extends CBitrixComponent
         if (!$iblock) {
             return false;
         }
-        return \Bitrix\Iblock\Iblock::wakeUp($iblock['ID'])->getEntityDataClass();
+        return $iblock;
+    }
+
+    /**
+     * Получить идентификаторы водителей из массива автомобилей.
+     * @param array $cars Массив автомобилей.
+     * @return array Массив идентификаторов водителей.
+     */
+    private function getDriverIds($cars)
+    {
+        $result = [];
+        foreach ($cars as $car) {
+            $result[] = $car['CAR_DRIVER']['VALUE'];
+        }
+        return $result;
     }
 }
