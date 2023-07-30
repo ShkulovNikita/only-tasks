@@ -141,9 +141,14 @@ class CCarsList extends CBitrixComponent
             return [];
         }
         /*
-         * Получить идентификаторы моделей автомобилей, соответствующие указанным категориям комфорта.
+         * Получить массив идентификаторов.
          */
-        $carModels = $this->getAvailableCarModels($comfortCategories);
+        $comfortIds = array_column($comfortCategories, 'ID');
+        /*
+         * Получить модели автомобилей, соответствующие указанным категориям комфорта.
+         */
+        $carModels = $this->getAvailableCarModels($comfortIds);
+
 
         $this->arResult['hl'] = $carModels;
     }
@@ -361,46 +366,73 @@ class CCarsList extends CBitrixComponent
     /**
      * Получить категории комфорта согласно указанной должности.
      * @param int $positionId Идентификатор должности пользователя либо пустая строка.
-     * @return array Список идентификаторов категорий комфорта, доступных пользователю.
+     * @return array Список категорий комфорта, доступных пользователю.
      */
     private function getComfortCategories($positionId)
     {
         /*
          * Если идентификатор должности пустой, то должность пользователя не содержится в справочнике.
-         * В этом случае получить идентификатор самой низкой категории комфорта. 
+         * В этом случае получить самую низкую категорию комфорта. 
          */
         if ($positionId == '') {
-            return $this->getComfortCategoryId('Третья');
+            return $this->getComfortCategoryByName('Третья');
         } else {
             /*
              * Если идентификатор должности указан, то найти записи о сопоставлении должностей и категорий комфорта. 
              */
-            return $this->getAllComfortCategoryIds($positionId);
+            $categoryIds = $this->getComfortCategoryIds($positionId);
+            if (count($categoryIds) > 0) {
+                return $this->getComfortCategoriesByIds($categoryIds);
+            } else {
+                return [];
+            }
         }
     }
 
     /**
-     * Получить идентификатор указанной категории комфорта.
+     * Получить указанную категорию комфорта.
      * @param string $categoryName Имя категории.
-     * @return int Идентификатор указанной категории комфорта в справочнике.
+     * @return array Категория комфорта с указанным именем.
      */
-    private function getComfortCategoryId($categoryName)
+    private function getComfortCategoryByName($categoryName)
     {
         $comfortHlBlockName = $this->getHlblockByName($this->codes['comfortability_categories']);
         $resComfCategories = $comfortHlBlockName::getList(
             [
-                'select' => ['ID'],
+                'select' => ['*'],
                 'order' => ['ID' => 'ASC'],
                 'filter' => ['UF_NAME' => $categoryName]
             ]
         )->fetchAll();
         if (count($resComfCategories) > 0) {
-            return [$resComfCategories[0]['ID']];
+            return $resComfCategories;
         } else {
             return [];
         }
     }
 
+    /**
+     * Получить категории комфорта по их идентификаторам.
+     * @param array $categoryIds Массив идентификаторов категорий комфорта.
+     * @return array Массив доступных пользователю категорий комфорта.
+     */
+    private function getComfortCategoriesByIds($categoryIds)
+    {
+        $comfortHlBlockName = $this->getHlblockByName($this->codes['comfortability_categories']);
+        $resComfCategories = $comfortHlBlockName::getList(
+            [
+                'select' => ['*'],
+                'order' => ['ID' => 'ASC'],
+                'filter' => ['ID' => $categoryIds]
+            ]
+        )->fetchAll();
+        if (count($resComfCategories) > 0) {
+            return $resComfCategories;
+        } else {
+            return [];
+        }
+    }
+    
     /**
      * Получить модели автомобилей указанных категорий комфорта.
      * @param array Идентификаторы категорий комфорта.
@@ -424,11 +456,11 @@ class CCarsList extends CBitrixComponent
     }
 
     /**
-     * Получить идентификаторы категорий комфорта для указанной должности.
+     * Получить идентификаторы доступных категорий комфорта для указанной должности.
      * @param int Идентификатор должности пользователя в справочнике.
      * @return array Массив идентификаторов доступных пользователю категорий комфорта.
      */
-    private function getAllComfortCategoryIds($positionId)
+    private function getComfortCategoryIds($positionId)
     {
         $comfortHlBlockName = $this->getHlblockByName($this->codes['comfortability_availability']);
         $resComfAvailability = $comfortHlBlockName::getList(
