@@ -8,7 +8,7 @@ use Bitrix\Main\Context,
     Bitrix\Main\Loader,
     Bitrix\Main\Entity,
     Bitrix\Iblock,
-    Bitrix\Highloadblock as HL; 
+    Bitrix\Highloadblock as HL;
 
 class CCarsList extends CBitrixComponent
 {
@@ -148,9 +148,12 @@ class CCarsList extends CBitrixComponent
          * Получить модели автомобилей, соответствующие указанным категориям комфорта.
          */
         $carModels = $this->getAvailableCarModels($comfortIds);
+        /*
+         * Получить идентификаторы автомобилей, занятых на период, выбранный пользователем.
+         */
+        $takenCarIds = $this->getTakenCars();
 
-
-        $this->arResult['hl'] = $carModels;
+        $this->arResult['hl'] = $takenCarIds;
     }
 
     /**
@@ -435,7 +438,7 @@ class CCarsList extends CBitrixComponent
     
     /**
      * Получить модели автомобилей указанных категорий комфорта.
-     * @param array Идентификаторы категорий комфорта.
+     * @param array $comfortIds Идентификаторы категорий комфорта.
      * @return array Доступные модели автомобилей.
      */
     private function getAvailableCarModels($comfortIds)
@@ -457,7 +460,7 @@ class CCarsList extends CBitrixComponent
 
     /**
      * Получить идентификаторы доступных категорий комфорта для указанной должности.
-     * @param int Идентификатор должности пользователя в справочнике.
+     * @param int $positionId Идентификатор должности пользователя в справочнике.
      * @return array Массив идентификаторов доступных пользователю категорий комфорта.
      */
     private function getComfortCategoryIds($positionId)
@@ -478,9 +481,75 @@ class CCarsList extends CBitrixComponent
     }
 
     /**
+     * Получить идентификаторы автомобилей, которые заняты на период, выбранный пользователем.
+     * @return array Массив идентификаторов занятых автомобилей.
+     */
+    private function getTakenCars()
+    {
+        $drivesHlBlockName = $this->getHlblockByName($this->codes['job_car_bookings']);
+        $resDrives = $drivesHlBlockName::getList(
+            [
+                'select' => ['UF_CAR_BOOKING_CHOSEN_CAR'],
+                'order' => ['ID' => 'ASC'],
+                'filter' => [
+                    /*
+                     * Автомобиль используется не текущим пользователем. 
+                     */
+                    '!=UF_CAR_BOOKING_USER_ID' => $GLOBALS['USER']->GetID(),
+                    /*
+                     * Определить, что период для использования данного автомобиля попадает
+                     * в выбранный пользователем период. 
+                     */
+                    [
+                        'LOGIC' => 'OR',
+                        /*
+                         * Выбранный пользователем период полностью включен в чужой период. 
+                         */
+                        [
+                            '<=UF_CAR_BOOKING_START' => $this->startTime, 
+                            '>=UF_CAR_BOOKING_END' => $this->endTime
+                        ],
+                        /*
+                         * Наоборот, чужой период полностью внутри выбранного. 
+                         */
+                        [
+                            '>=UF_CAR_BOOKING_START' => $this->startTime, 
+                            '<=UF_CAR_BOOKING_END' => $this->endTime
+                        ],
+                        /*
+                         * Пересечения временных промежутков.
+                         */
+                        [
+                            '<=UF_CAR_BOOKING_START' => $this->startTime,
+                            '>=UF_CAR_BOOKING_END' => $this->startTime
+                        ],
+                        [
+                            '>=UF_CAR_BOOKING_START' => $this->startTime,
+                            '<=UF_CAR_BOOKING_END' => $this->startTime
+                        ],
+                        [
+                            '<=UF_CAR_BOOKING_START' => $this->endTime,
+                            '>=UF_CAR_BOOKING_END' => $this->endTime
+                        ],
+                        [
+                            '>=UF_CAR_BOOKING_START' => $this->endTime,
+                            '<=UF_CAR_BOOKING_END' => $this->endTime
+                        ]
+                    ]
+                ]
+            ]
+        )->fetchAll();
+        if (count($resDrives) > 0) {
+            return array_column($resDrives, 'UF_CAR_BOOKING_CHOSEN_CAR');
+        } else {
+            return [];
+        }
+    }
+
+    /**
      * Получить сущность highload-блока по его имени.
      * @param string $name Имя highload-блока.
-     * @return string Имя класса сущности для выполнения запросов.
+     * @return string|bool Имя класса сущности для выполнения запросов.
      */
     private function getHlblockByName($name)
     {
@@ -493,5 +562,22 @@ class CCarsList extends CBitrixComponent
 
         $hlClassName = (HL\HighloadBlockTable::compileEntity($hlblock))->getDataClass();
         return $hlClassName;
+    }
+    
+    /**
+     * Получить имя сущности инфоблока.
+     * @param string $name Имя инфоблока.
+     * @return string|bool Имя класса инфоблока для выполнения запросов.
+     */
+    private function getIblockByName($name)
+    {
+        $iblock = CIBlock::GetList(
+            [],
+            ['CODE' => $name]
+        )->fetch();
+        if (!$iblock) {
+            return false;
+        }
+        return \Bitrix\Iblock\Iblock::wakeUp($iblock['ID'])->getEntityDataClass();
     }
 }
