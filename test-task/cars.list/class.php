@@ -136,8 +136,16 @@ class CCarsList extends CBitrixComponent
          * Определить, какие категории комфорта доступны пользователю согласно его должности. 
          */
         $comfortCategories = $this->getComfortCategories($positionId);
+        if ($comfortCategories == []) {
+            ShowError(GetMessage('T_JOB_CARS_NO_COMFORT_CATEGORY_OF_USER_ERROR'));
+            return [];
+        }
+        /*
+         * Получить идентификаторы моделей автомобилей, соответствующие указанным категориям комфорта.
+         */
+        $carModels = $this->getAvailableCarModels($comfortCategories);
 
-        $this->arResult['hl'] = $comfortCategories;
+        $this->arResult['hl'] = $carModels;
     }
 
     /**
@@ -319,7 +327,7 @@ class CCarsList extends CBitrixComponent
 
     /**
      * Получить идентификатор должности текущего пользователя в справочнике должностей.
-     * @return int Идентификатор должности в справочнике либо пустая строка.
+     * @return int|string Идентификатор должности в справочнике либо пустая строка.
      */
     private function findPositionInDirectory()
     {
@@ -387,7 +395,29 @@ class CCarsList extends CBitrixComponent
             ]
         )->fetchAll();
         if (count($resComfCategories) > 0) {
-            return $resComfCategories[0]['ID'];
+            return [$resComfCategories[0]['ID']];
+        } else {
+            return [];
+        }
+    }
+
+    /**
+     * Получить модели автомобилей указанных категорий комфорта.
+     * @param array Идентификаторы категорий комфорта.
+     * @return array Доступные модели автомобилей.
+     */
+    private function getAvailableCarModels($comfortIds)
+    {
+        $carModelsHlBlockName = $this->getHlblockByName($this->codes['car_models']);
+        $resCarModels = $carModelsHlBlockName::getList(
+            [
+                'select' => ['*'],
+                'order' => ['ID' => 'ASC'],
+                'filter' => ['UF_CAR_COMFORTABILITY_OF_MODEL' => $comfortIds]
+            ]
+        )->fetchAll();
+        if (count($resCarModels) > 0) {
+            return $resCarModels;
         } else {
             return [];
         }

@@ -11,4 +11,5 @@ $MESS ['T_JOB_CARS_START_END_TIME_INCORRECT_ORDER_ERROR'] = 'Время нача
 $MESS ['T_JOB_CARS_CANT_GET_USER_DATA_ERROR'] = 'Не удалось получить должность пользователя.';
 $MESS ['T_JOB_CARS_LOGIN_REQUIRED_MESSAGE'] = 'Для получения списка автомобилей необходимо авторизоваться.';
 $MESS ['T_JOB_CARS_POSITION_REQUIRED_ERROR'] = 'Не указана должность пользователя.';
+$MESS ['T_JOB_CARS_NO_COMFORT_CATEGORY_OF_USER_ERROR'] = 'Нет доступных категорий комфорта для пользователя.';
 ?>
