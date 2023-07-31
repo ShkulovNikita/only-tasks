@@ -84,7 +84,7 @@ class CCarsList extends CBitrixComponent
             /*
              * Сформировать массив результата работы компонента. 
              */
-            $this->makeArResult($comfortCategories, $carModels, $availableCars);
+            $this->makeArResult($comfortCategories, $carModels, $availableCars, $carBrands, $carDrivers);
         }
         /*
          * Подключить шаблон компонента.
@@ -178,8 +178,6 @@ class CCarsList extends CBitrixComponent
          */
         $driversIds = $this->getDriverIds($availableCars);
         $carDrivers = $this->getCarDrivers($driversIds);
-
-        $this->arResult['brands'] = $carDrivers;
     }
 
     /**
@@ -187,10 +185,49 @@ class CCarsList extends CBitrixComponent
      * @param array $comfortCategories Массив категорий комфорта.
      * @param array $carModels Массив доступных пользователю моделей автомобилей.
      * @param array $availableCars Массив доступных пользователю служебных автомобилей.
+     * @param array $carBrands Массив марок автомобилей.
+     * @param array $carDrivers Массив водителей.
      */
-    private function makeArResult($comfortCategories, $carModels, $availableCars)
+    private function makeArResult($comfortCategories, $carModels, $availableCars, $carBrands, $carDrivers)
     {
-        //TODO
+        /**
+         * Массив arResult включает в себя подмассив из автомобилей, для каждого из которых
+         * указываются категория комфорта, модель, марка и водитель.
+         */
+        $this->arResult['CARS'] = [];
+        foreach ($availableCars as $car) {
+            $row = [];
+            /*
+             * Сохранить сам автомобиль. 
+             */
+            $row['CAR'] = $car;
+            /*
+             * Получить путь до изображения автомобиля вместо числа. 
+             */
+            $this->setImagePath($row['CAR'], 'PREVIEW_PICTURE');
+            /*
+             * Сохранить его модель. 
+             */
+            $row['MODEL'] = $this->findCarModel($car, $carModels);
+            if ($row['MODEL'] != []) {
+                /*
+                 * Сохранить его марку. 
+                 */
+                $row['BRAND'] = $this->findCarBrand($row['MODEL'], $carBrands);
+                /*
+                 * Также категорию комфорта. 
+                 */
+                $row['COMFORT_CATEGORY'] = $this->findCarComfortCategory($row['MODEL'], $comfortCategories);
+            }
+            /*
+             * Сохранить информацию о водителе автомобиля.
+             */
+            $row['DRIVER'] = $this->findCarDriver($car, $carDrivers);
+            /*
+             * Добавить готовый элемент в arResult.
+             */
+            $this->arResult['CARS'][] = $row;
+        }
     }
 
     /**
@@ -524,7 +561,6 @@ class CCarsList extends CBitrixComponent
      */
     private function getCarBrands($carBrandsIds)
     {
-        print_r($carBrandsIds);
         $brandHlBlockName = $this->getHlblockByName($this->codes['car_brands']);
         $resBrands = $brandHlBlockName::getList(
             [
@@ -712,5 +748,100 @@ class CCarsList extends CBitrixComponent
             $result[] = $car['CAR_DRIVER']['VALUE'];
         }
         return $result;
+    }
+
+    /**
+     * Получить модель указанного служебного автомобиля.
+     * @param array $car Служебный автомобиль.
+     * @param array $carModels Модели автомобилей.
+     * @return array Информация о модели автомобиля.
+     */
+    private function findCarModel($car, $carModels)
+    {
+        foreach ($carModels as $model) {
+            if ($car['CAR_MODEL']['VALUE'] == $model['UF_XML_ID']) {
+                /*
+                 * Получить файл изображения
+                 */
+                $this->setImagePath($model, 'UF_CAR_MODEL_PHOTO');
+
+                return $model;
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Получить марку указанного служебного автомобиля.
+     * @param array $carModel Модель автомобиля.
+     * @param array $carBrands Марки автомобилей.
+     * @return array Информация о марке автомобиля.
+     */
+    private function findCarBrand($carModel, $carBrands)
+    {
+        foreach ($carBrands as $brand) {
+            if ($carModel['UF_CAR_BRAND_OF_MODEL'] == $brand['ID']) {
+                $this->setImagePath($brand, 'UF_CAR_BRAND_LOGO');
+
+                return $brand;
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Получить категорию комфорта указанного служебного автомобиля.
+     * @param array $carModel Модель автомобиля.
+     * @param array $comfortCategories Категории комфорта автомобилей.
+     * @return array Информация о категории комфорта автомобиля.
+     */
+    private function findCarComfortCategory($carModel, $comfortCategories)
+    {
+        foreach ($comfortCategories as $comfCategory) {
+            if ($carModel['UF_CAR_COMFORTABILITY_OF_MODEL'] == $comfCategory['ID']) {
+                return $comfCategory;
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Получить водителя указанного служебного автомобиля.
+     * @param array $car Служебный автомобиль.
+     * @param array $drivers Водители автомобилей.
+     * @return array Информация о водителе автомобиля.
+     */
+    private function findCarDriver($car, $drivers)
+    {
+        foreach ($drivers as $driver) {
+            if ($car['CAR_DRIVER']['VALUE'] == $driver['ID']) {
+                $this->setImagePath($driver, 'PREVIEW_PICTURE');
+
+                return $driver;
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Заменить числовые значения изображений в хайлоад-блоках на пути.
+     * @param array $model Массив, в котором записывается путь.
+     * @param string $fieldName Имя поля, в котором сохраняется путь до изображения.
+     */
+    private function setImagePath(&$model, $fieldName)
+    {
+        if (
+            isset($model) 
+            && isset($model[$fieldName]) 
+            && ($model[$fieldName] > 0)
+        ) {
+            $model[$fieldName] = CFile::GetPath($model[$fieldName]);
+        } elseif (isset($model)) {
+            $model[$fieldName] = '';
+        }
     }
 }
