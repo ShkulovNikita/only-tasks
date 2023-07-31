@@ -168,6 +168,10 @@ class CCarsList extends CBitrixComponent
          */
         $carModelsIds = array_column($carModels, 'UF_XML_ID');
         $availableCars = $this->getAvailableCars($takenCarIds, $carModelsIds);
+        if (count($availableCars) == 0) {
+            ShowError(GetMessage('T_JOB_CARS_NO_AVAILABLE_CARS_FOUND_MESSAGE'));
+            return;
+        }
         /*
          * Получить их бренды.
          */
@@ -328,19 +332,10 @@ class CCarsList extends CBitrixComponent
         try {
             $parts = explode(':', $time);
             $userTime = $userTime->setTime(intval($parts[0]), intval($parts[1]));
-            
-            /**
-             * Перевести время в timestamp, чтобы учесть разницу часовых поясов.
-             */
-            $userTimeStamp = $userTime->getTimestamp();
             /*
-             * Перевод в серверное время. 
+             * Перевести время в часовой пояс сервера. 
              */
-            $serverTimeStamp = $userTimeStamp - CTimeZone::GetOffset();
-            /*
-             * Создать объект для серверного времени. 
-             */
-            $serverTime = \Bitrix\Main\Type\DateTime::createFromTimestamp($serverTimeStamp);
+            $serverTime = $this->getServerTime($userTime);
             
             return $serverTime;
         } catch (Exception $ex) {
@@ -358,13 +353,36 @@ class CCarsList extends CBitrixComponent
         /*
          * Получить текущее время. 
          */
-        $currentTime = new Bitrix\Main\Type\DateTime();
+        $currentTime = DateTime::createFromPhp(new \DateTime());
 
         if ($time->getTimestamp() < $currentTime->getTimestamp()) {
             return false;
         } else {
             return true;
         }
+    }
+
+    /**
+     * Перевести время в серверный часовой пояс.
+     * @param Bitrix\Main\Type\DateTime $defaultTime Время в пользовательском часовом поясе.
+     * @return Bitrix\Main\Type\DateTime Время в серверном часовом поясе.
+     */
+    private function getServerTime($defaultTime)
+    {
+        /*
+         * Перевести время в timestamp, чтобы учесть разницу часовых поясов.
+         */
+        $userTimeStamp = $defaultTime->getTimestamp();
+        /*
+         * Перевод в серверное время. 
+         */
+        $serverTimeStamp = $userTimeStamp - CTimeZone::GetOffset();
+        /*
+         * Создать объект для серверного времени. 
+         */
+        $serverTime = \Bitrix\Main\Type\DateTime::createFromTimestamp($serverTimeStamp);
+
+        return $serverTime;
     }
 
     /**

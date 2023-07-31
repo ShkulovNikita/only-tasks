@@ -279,7 +279,7 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
         $arProps = [
             [
                 'NAME' => 'Имя',
-                'CODE' => 'NAME',
+                'CODE' => 'FIRST_NAME',
                 'PROPERTY_TYPE' => 'S',
                 'IS_REQUIRED' => 'Y'
             ],
