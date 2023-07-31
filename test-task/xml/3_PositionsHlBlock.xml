@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hiblock>
+	<hiblock>
+		<id>117</id>
+		<name>Positions</name>
+		<table_name>hl_jobcars_positions</table_name>
+	</hiblock>
+	<langs>
+	</langs>
+	<fields>
+		<field>
+			<id>308</id>
+			<entity_id>HLBLOCK_117</entity_id>
+			<field_name>UF_NAME</field_name>
+			<user_type_id>string</user_type_id>
+			<xml_id />
+			<sort>500</sort>
+			<multiple>N</multiple>
+			<mandatory>Y</mandatory>
+			<show_filter>I</show_filter>
+			<show_in_list>Y</show_in_list>
+			<edit_in_list>Y</edit_in_list>
+			<is_searchable>N</is_searchable>
+			<settings>
+				<size>20</size>
+				<rows>1</rows>
+				<regexp />
+				<min_length>0</min_length>
+				<max_length>0</max_length>
+				<default_value />
+			</settings>
+			<edit_form_label>
+				<en>Comfortability class</en>
+				<ru>Должность</ru>
+			</edit_form_label>
+			<list_column_label>
+				<en>Comfortability class</en>
+				<ru>Должность</ru>
+			</list_column_label>
+			<list_filter_label>
+				<en>Comfortability class</en>
+				<ru>Должность</ru>
+			</list_filter_label>
+			<error_message>
+				<en />
+				<ru />
+			</error_message>
+			<help_message>
+				<en />
+				<ru />
+			</help_message>
+			<base_type>string</base_type>
+		</field>
+		<field>
+			<id>309</id>
+			<entity_id>HLBLOCK_117</entity_id>
+			<field_name>UF_XML_ID</field_name>
+			<user_type_id>string</user_type_id>
+			<xml_id />
+			<sort>500</sort>
+			<multiple>N</multiple>
+			<mandatory>Y</mandatory>
+			<show_filter>I</show_filter>
+			<show_in_list>Y</show_in_list>
+			<edit_in_list>Y</edit_in_list>
+			<is_searchable>N</is_searchable>
+			<settings>
+				<size>20</size>
+				<rows>1</rows>
+				<regexp />
+				<min_length>0</min_length>
+				<max_length>0</max_length>
+				<default_value />
+			</settings>
+			<edit_form_label>
+				<en>XML_ID</en>
+				<ru>XML_ID</ru>
+			</edit_form_label>
+			<list_column_label>
+				<en>XML_ID</en>
+				<ru>XML_ID</ru>
+			</list_column_label>
+			<list_filter_label>
+				<en>XML_ID</en>
+				<ru>XML_ID</ru>
+			</list_filter_label>
+			<error_message>
+				<en />
+				<ru />
+			</error_message>
+			<help_message>
+				<en />
+				<ru />
+			</help_message>
+			<base_type>string</base_type>
+		</field>
+	</fields>
+	<items>
+		<item>
+			<id>1</id>
+			<uf_name>Разработчик</uf_name>
+			<uf_xml_id>DEVELOPER</uf_xml_id>
+		</item>
+		<item>
+			<id>2</id>
+			<uf_name>Менеджер по продажам</uf_name>
+			<uf_xml_id>SALES_MANAGER</uf_xml_id>
+		</item>
+		<item>
+			<id>3</id>
+			<uf_name>Генеральный директор</uf_name>
+			<uf_xml_id>CEO</uf_xml_id>
+		</item>
+		<item>
+			<id>4</id>
+			<uf_name>SEO-специалист</uf_name>
+			<uf_xml_id>SEO</uf_xml_id>
+		</item>
+		<item>
+			<id>5</id>
+			<uf_name>Менеджер по продукту</uf_name>
+			<uf_xml_id>PRODUCT_MANAGER</uf_xml_id>
+		</item>
+		<item>
+			<id>6</id>
+			<uf_name>Руководитель группы разработки</uf_name>
+			<uf_xml_id>TEAM_LEADER</uf_xml_id>
+		</item>
+		<item>
+			<id>7</id>
+			<uf_name>Младший разработчик</uf_name>
+			<uf_xml_id>JUNIOR_DEVELOPER</uf_xml_id>
+		</item>
+	</items>
+</hiblock>

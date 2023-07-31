@@ -305,9 +305,10 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
             $helper->AdminIblock()->buildElementForm($driversIblockId, [
                 'Личные данные' => [
                     'NAME' => 'Фамилия',
-                    'PROPERTY_NAME',
+                    'PROPERTY_FIRST_NAME',
                     'PROPERTY_PATRONYMIC',
-                    'PROPERTY_PHONE'
+                    'PROPERTY_PHONE',
+                    'PREVIEW_PICTURE'
                 ]
             ]);
         }
@@ -603,7 +604,8 @@ class CREATE_DATA_STRUCTURE20230727101917 extends Version
                     'NAME' => 'Госномер',
                     'PROPERTY_CAR_MANUFACT_DATE',
                     'PROPERTY_CAR_DRIVER',
-                    'PROPERTY_CAR_MODEL'
+                    'PROPERTY_CAR_MODEL',
+                    'PREVIEW_PICTURE'
                 ]
             ]);
         }

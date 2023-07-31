@@ -10,7 +10,7 @@ $MESS ['T_JOB_CARS_END_TIME_IS_EARLIER_THAN_CURRENT_ERROR'] = 'Время око
 $MESS ['T_JOB_CARS_START_END_TIME_INCORRECT_ORDER_ERROR'] = 'Время начала поездки не может быть позже её окончания.';
 $MESS ['T_JOB_CARS_CANT_GET_USER_DATA_ERROR'] = 'Не удалось получить должность пользователя.';
 $MESS ['T_JOB_CARS_LOGIN_REQUIRED_MESSAGE'] = 'Для получения списка автомобилей необходимо авторизоваться.';
-$MESS ['T_JOB_CARS_POSITION_REQUIRED_ERROR'] = 'Не указана должность пользователя.';
+$MESS ['T_JOB_CARS_POSITION_REQUIRED_ERROR'] = 'Не указана должность пользователя (Настройки пользователя->Работа->Должность).';
 $MESS ['T_JOB_CARS_NO_COMFORT_CATEGORY_OF_USER_ERROR'] = 'Нет доступных категорий комфорта для пользователя.';
 $MESS ['T_JOB_CARS_NO_AVAILABLE_CARS_FOUND_MESSAGE'] = 'Нет доступных автомобилей на выбранный период.';
 ?>

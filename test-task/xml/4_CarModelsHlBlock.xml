@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hiblock>
+	<hiblock>
+		<id>118</id>
+		<name>CarModels</name>
+		<table_name>hl_car_model</table_name>
+	</hiblock>
+	<langs>
+	</langs>
+	<fields>
+		<field>
+			<id>310</id>
+			<entity_id>HLBLOCK_118</entity_id>
+			<field_name>UF_NAME</field_name>
+			<user_type_id>string</user_type_id>
+			<xml_id />
+			<sort>500</sort>
+			<multiple>N</multiple>
+			<mandatory>Y</mandatory>
+			<show_filter>I</show_filter>
+			<show_in_list>Y</show_in_list>
+			<edit_in_list>Y</edit_in_list>
+			<is_searchable>N</is_searchable>
+			<settings>
+				<size>20</size>
+				<rows>1</rows>
+				<regexp />
+				<min_length>0</min_length>
+				<max_length>0</max_length>
+				<default_value />
+			</settings>
+			<edit_form_label>
+				<en>Model name</en>
+				<ru>Название</ru>
+			</edit_form_label>
+			<list_column_label>
+				<en>Model name</en>
+				<ru>Название</ru>
+			</list_column_label>
+			<list_filter_label>
+				<en>Model name</en>
+				<ru>Название</ru>
+			</list_filter_label>
+			<error_message>
+				<en />
+				<ru />
+			</error_message>
+			<help_message>
+				<en />
+				<ru />
+			</help_message>
+			<base_type>string</base_type>
+		</field>
+		<field>
+			<id>311</id>
+			<entity_id>HLBLOCK_118</entity_id>
+			<field_name>UF_XML_ID</field_name>
+			<user_type_id>string</user_type_id>
+			<xml_id />
+			<sort>500</sort>
+			<multiple>N</multiple>
+			<mandatory>Y</mandatory>
+			<show_filter>I</show_filter>
+			<show_in_list>Y</show_in_list>
+			<edit_in_list>Y</edit_in_list>
+			<is_searchable>N</is_searchable>
+			<settings>
+				<size>20</size>
+				<rows>1</rows>
+				<regexp />
+				<min_length>0</min_length>
+				<max_length>0</max_length>
+				<default_value />
+			</settings>
+			<edit_form_label>
+				<en>XML_ID</en>
+				<ru>XML_ID</ru>
+			</edit_form_label>
+			<list_column_label>
+				<en>XML_ID</en>
+				<ru>XML_ID</ru>
+			</list_column_label>
+			<list_filter_label>
+				<en>XML_ID</en>
+				<ru>XML_ID</ru>
+			</list_filter_label>
+			<error_message>
+				<en />
+				<ru />
+			</error_message>
+			<help_message>
+				<en />
+				<ru />
+			</help_message>
+			<base_type>string</base_type>
+		</field>
+		<field>
+			<id>312</id>
+			<entity_id>HLBLOCK_118</entity_id>
+			<field_name>UF_CAR_MODEL_PHOTO</field_name>
+			<user_type_id>file</user_type_id>
+			<xml_id />
+			<sort>500</sort>
+			<multiple>N</multiple>
+			<mandatory>N</mandatory>
+			<show_filter>I</show_filter>
+			<show_in_list>Y</show_in_list>
+			<edit_in_list>Y</edit_in_list>
+			<is_searchable>N</is_searchable>
+			<settings>
+				<size>20</size>
+				<list_width>0</list_width>
+				<list_height>0</list_height>
+				<max_show_size>0</max_show_size>
+				<max_allowed_size>0</max_allowed_size>
+				<extensions />
+				<target_blank>Y</target_blank>
+			</settings>
+			<edit_form_label>
+				<en>Model photo</en>
+				<ru>Изображение</ru>
+			</edit_form_label>
+			<list_column_label>
+				<en>Model photo</en>
+				<ru>Изображение</ru>
+			</list_column_label>
+			<list_filter_label>
+				<en>Model photo</en>
+				<ru>Изображение</ru>
+			</list_filter_label>
+			<error_message>
+				<en />
+				<ru />
+			</error_message>
+			<help_message>
+				<en />
+				<ru />
+			</help_message>
+			<base_type>file</base_type>
+		</field>
+		<field>
+			<id>313</id>
+			<entity_id>HLBLOCK_118</entity_id>
+			<field_name>UF_CAR_BRAND_OF_MODEL</field_name>
+			<user_type_id>hlblock</user_type_id>
+			<xml_id />
+			<sort>500</sort>
+			<multiple>N</multiple>
+			<mandatory>Y</mandatory>
+			<show_filter>I</show_filter>
+			<show_in_list>Y</show_in_list>
+			<edit_in_list>Y</edit_in_list>
+			<is_searchable>N</is_searchable>
+			<settings>
+				<display>LIST</display>
+				<list_height>3</list_height>
+				<hlblock_id>115</hlblock_id>
+				<hlfield_id>303</hlfield_id>
+				<default_value>0</default_value>
+				<hlblock_table>hl_car_brand</hlblock_table>
+			</settings>
+			<edit_form_label>
+				<en>Car brand</en>
+				<ru>Марка</ru>
+			</edit_form_label>
+			<list_column_label>
+				<en>Car brand</en>
+				<ru>Марка</ru>
+			</list_column_label>
+			<list_filter_label>
+				<en>Car brand</en>
+				<ru>Марка</ru>
+			</list_filter_label>
+			<error_message>
+				<en />
+				<ru />
+			</error_message>
+			<help_message>
+				<en />
+				<ru />
+			</help_message>
+			<base_type>int</base_type>
+		</field>
+		<field>
+			<id>314</id>
+			<entity_id>HLBLOCK_118</entity_id>
+			<field_name>UF_CAR_COMFORTABILITY_OF_MODEL</field_name>
+			<user_type_id>hlblock</user_type_id>
+			<xml_id />
+			<sort>500</sort>
+			<multiple>N</multiple>
+			<mandatory>Y</mandatory>
+			<show_filter>I</show_filter>
+			<show_in_list>Y</show_in_list>
+			<edit_in_list>Y</edit_in_list>
+			<is_searchable>N</is_searchable>
+			<settings>
+				<display>LIST</display>
+				<list_height>3</list_height>
+				<hlblock_id>116</hlblock_id>
+				<hlfield_id>306</hlfield_id>
+				<default_value>0</default_value>
+				<hlblock_table>hl_comfortability_category</hlblock_table>
+			</settings>
+			<edit_form_label>
+				<en>Comfortability</en>
+				<ru>Категория комфорта</ru>
+			</edit_form_label>
+			<list_column_label>
+				<en>Comfortability</en>
+				<ru>Категория комфорта</ru>
+			</list_column_label>
+			<list_filter_label>
+				<en>Comfortability</en>
+				<ru>Категория комфорта</ru>
+			</list_filter_label>
+			<error_message>
+				<en />
+				<ru />
+			</error_message>
+			<help_message>
+				<en />
+				<ru />
+			</help_message>
+			<base_type>int</base_type>
+		</field>
+	</fields>
+	<items>
+		<item>
+			<id>1</id>
+			<uf_name>Arteon</uf_name>
+			<uf_xml_id>ARTEON</uf_xml_id>
+			<uf_car_model_photo>0</uf_car_model_photo>
+			<uf_car_brand_of_model>1</uf_car_brand_of_model>
+			<uf_car_comfortability_of_model>2</uf_car_comfortability_of_model>
+		</item>
+		<item>
+			<id>2</id>
+			<uf_name>A8</uf_name>
+			<uf_xml_id>AUDI_A8</uf_xml_id>
+			<uf_car_model_photo>0</uf_car_model_photo>
+			<uf_car_brand_of_model>2</uf_car_brand_of_model>
+			<uf_car_comfortability_of_model>1</uf_car_comfortability_of_model>
+		</item>
+		<item>
+			<id>3</id>
+			<uf_name>Superb</uf_name>
+			<uf_xml_id>SUPERB</uf_xml_id>
+			<uf_car_model_photo>0</uf_car_model_photo>
+			<uf_car_brand_of_model>3</uf_car_brand_of_model>
+			<uf_car_comfortability_of_model>2</uf_car_comfortability_of_model>
+		</item>
+		<item>
+			<id>4</id>
+			<uf_name>KA</uf_name>
+			<uf_xml_id>FORD_KA</uf_xml_id>
+			<uf_car_model_photo>0</uf_car_model_photo>
+			<uf_car_brand_of_model>4</uf_car_brand_of_model>
+			<uf_car_comfortability_of_model>3</uf_car_comfortability_of_model>
+		</item>
+	</items>
+</hiblock>

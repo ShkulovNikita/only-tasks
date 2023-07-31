@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hiblock>
+	<hiblock>
+		<id>119</id>
+		<name>ComfortabilityAvailability</name>
+		<table_name>hl_comfortability_availability</table_name>
+	</hiblock>
+	<langs>
+	</langs>
+	<fields>
+		<field>
+			<id>315</id>
+			<entity_id>HLBLOCK_119</entity_id>
+			<field_name>UF_COMF_AVAIL_POSITION</field_name>
+			<user_type_id>hlblock</user_type_id>
+			<xml_id />
+			<sort>500</sort>
+			<multiple>N</multiple>
+			<mandatory>Y</mandatory>
+			<show_filter>I</show_filter>
+			<show_in_list>Y</show_in_list>
+			<edit_in_list>Y</edit_in_list>
+			<is_searchable>N</is_searchable>
+			<settings>
+				<display>LIST</display>
+				<list_height>3</list_height>
+				<hlblock_id>117</hlblock_id>
+				<hlfield_id>308</hlfield_id>
+				<default_value>0</default_value>
+				<hlblock_table>hl_jobcars_positions</hlblock_table>
+			</settings>
+			<edit_form_label>
+				<en>Position</en>
+				<ru>Должность</ru>
+			</edit_form_label>
+			<list_column_label>
+				<en>Position</en>
+				<ru>Должность</ru>
+			</list_column_label>
+			<list_filter_label>
+				<en>Position</en>
+				<ru>Должность</ru>
+			</list_filter_label>
+			<error_message>
+				<en />
+				<ru />
+			</error_message>
+			<help_message>
+				<en />
+				<ru />
+			</help_message>
+			<base_type>int</base_type>
+		</field>
+		<field>
+			<id>316</id>
+			<entity_id>HLBLOCK_119</entity_id>
+			<field_name>UF_COMF_AVAIL_CATEGORY</field_name>
+			<user_type_id>hlblock</user_type_id>
+			<xml_id />
+			<sort>500</sort>
+			<multiple>N</multiple>
+			<mandatory>Y</mandatory>
+			<show_filter>I</show_filter>
+			<show_in_list>Y</show_in_list>
+			<edit_in_list>Y</edit_in_list>
+			<is_searchable>N</is_searchable>
+			<settings>
+				<display>LIST</display>
+				<list_height>3</list_height>
+				<hlblock_id>116</hlblock_id>
+				<hlfield_id>306</hlfield_id>
+				<default_value>0</default_value>
+				<hlblock_table>hl_comfortability_category</hlblock_table>
+			</settings>
+			<edit_form_label>
+				<en>Available comfortability class</en>
+				<ru>Доступная категория комфорта</ru>
+			</edit_form_label>
+			<list_column_label>
+				<en>Available comfortability class</en>
+				<ru>Доступная категория комфорта</ru>
+			</list_column_label>
+			<list_filter_label>
+				<en>Available comfortability class</en>
+				<ru>Доступная категория комфорта</ru>
+			</list_filter_label>
+			<error_message>
+				<en />
+				<ru />
+			</error_message>
+			<help_message>
+				<en />
+				<ru />
+			</help_message>
+			<base_type>int</base_type>
+		</field>
+	</fields>
+	<items>
+		<item>
+			<id>1</id>
+			<uf_comf_avail_position>3</uf_comf_avail_position>
+			<uf_comf_avail_category>1</uf_comf_avail_category>
+		</item>
+		<item>
+			<id>2</id>
+			<uf_comf_avail_position>2</uf_comf_avail_position>
+			<uf_comf_avail_category>2</uf_comf_avail_category>
+		</item>
+		<item>
+			<id>3</id>
+			<uf_comf_avail_position>1</uf_comf_avail_position>
+			<uf_comf_avail_category>2</uf_comf_avail_category>
+		</item>
+		<item>
+			<id>4</id>
+			<uf_comf_avail_position>4</uf_comf_avail_position>
+			<uf_comf_avail_category>2</uf_comf_avail_category>
+		</item>
+		<item>
+			<id>5</id>
+			<uf_comf_avail_position>5</uf_comf_avail_position>
+			<uf_comf_avail_category>2</uf_comf_avail_category>
+		</item>
+		<item>
+			<id>6</id>
+			<uf_comf_avail_position>6</uf_comf_avail_position>
+			<uf_comf_avail_category>2</uf_comf_avail_category>
+		</item>
+		<item>
+			<id>8</id>
+			<uf_comf_avail_position>1</uf_comf_avail_position>
+			<uf_comf_avail_category>3</uf_comf_avail_category>
+		</item>
+		<item>
+			<id>9</id>
+			<uf_comf_avail_position>2</uf_comf_avail_position>
+			<uf_comf_avail_category>3</uf_comf_avail_category>
+		</item>
+		<item>
+			<id>10</id>
+			<uf_comf_avail_position>4</uf_comf_avail_position>
+			<uf_comf_avail_category>3</uf_comf_avail_category>
+		</item>
+		<item>
+			<id>11</id>
+			<uf_comf_avail_position>5</uf_comf_avail_position>
+			<uf_comf_avail_category>3</uf_comf_avail_category>
+		</item>
+		<item>
+			<id>12</id>
+			<uf_comf_avail_position>6</uf_comf_avail_position>
+			<uf_comf_avail_category>3</uf_comf_avail_category>
+		</item>
+		<item>
+			<id>13</id>
+			<uf_comf_avail_position>7</uf_comf_avail_position>
+			<uf_comf_avail_category>3</uf_comf_avail_category>
+		</item>
+	</items>
+</hiblock>

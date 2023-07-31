@@ -114,7 +114,7 @@ class CCarsList extends CBitrixComponent
             return;
         }
         /**
-         * Получить должность текущего пользователя.
+         * Получить должность текущего пользователя (поле "Должность" в разделе "Работа").
          */
         global $USER;
         if (isset($GLOBALS['USER']) && is_object($GLOBALS['USER']) && $GLOBALS['USER']->IsAuthorized()) {
@@ -237,7 +237,7 @@ class CCarsList extends CBitrixComponent
     /**
      * Получить и проверить дату-время начала или конца поездки (в часовом поясе сервера).
      * @param string $param Имя GET-параметра с временем 
-     * (также указывает, является ли данное время началом или концом поездки)
+     * (также указывает, является ли данное время началом или концом поездки).
      * @return Bitrix\Main\Type\DateTime|bool Дата-время начала или конца поездки либо false.
      */
     private function getCarDriveDateTime($param)
